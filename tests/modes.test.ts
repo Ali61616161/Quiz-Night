@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { advance, appeal, createTeam, joinTeam, newGame, overrideTeam, placeWager, setMode, submitAnswer, suggest, tick, useJoker, voidQuestion, GameError } from "@/lib/engine/game";
+import { advance, appeal, createTeam, joinTeam, newGame, overrideTeam, placeWager, setMode, submitAnswer, suggest, tick, activateJoker, voidQuestion, GameError } from "@/lib/engine/game";
 import { playerView, hostView, tvView } from "@/lib/engine/views";
 import type { Question } from "@/lib/engine/types";
 
@@ -74,8 +74,8 @@ describe("tur tipleri", () => {
   });
   it("joker puanı ikiye katlar, yalnızca bir kez", () => {
     const { g, a } = setup([mc("1"), mc("2")]); open(g);
-    useJoker(g, a.memberToken);
-    expect(() => useJoker(g, a.memberToken)).toThrow(/zaten/);
+    activateJoker(g, a.memberToken);
+    expect(() => activateJoker(g, a.memberToken)).toThrow(/zaten/);
     submitAnswer(g, { memberToken: a.memberToken, value: "A", lock: true, now: 1 });
     advance(g, 2); advance(g, 2);
     expect(g.teams[0].score).toBe(200);

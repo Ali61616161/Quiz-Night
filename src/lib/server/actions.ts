@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   adjustScore, advance, appeal, claimCaptain, createTeam, extendTime, GameError, handOverCaptain, heartbeat, joinTeam,
-  kickTeam, overrideTeam, placeWager, renameTeam, setMode, submitAnswer, suggest, useJoker, voidQuestion,
+  kickTeam, overrideTeam, rotateTvToken, placeWager, renameTeam, setMode, submitAnswer, suggest, activateJoker, voidQuestion,
 } from "@/lib/engine/game";
 import type { Game } from "@/lib/engine/types";
 import { audit, db, save } from "./db";
@@ -21,6 +21,7 @@ const hostAction = z.discriminatedUnion("type", [
   z.object({ type: z.literal("void"), award: z.boolean(), reason: z.string().max(200).optional() }),
   z.object({ type: z.literal("settings"), points: z.number().int().min(10).max(1000).optional(), wrongPenalty: z.number().int().min(0).max(500).optional(), durationSec: z.number().int().min(10).max(180).optional(), lockFirst: z.boolean().optional(), teamMax: z.number().int().min(1).max(8).optional(), individualAgg: z.enum(["avg", "sum"]).optional(), speedBonus: z.boolean().optional() }),
   z.object({ type: z.literal("end") }),
+  z.object({ type: z.literal("tv_rotate") }),
 ]);
 
 const playerAction = z.discriminatedUnion("type", [
@@ -70,6 +71,7 @@ export function runHostAction(game: Game, raw: unknown) {
       if (a.speedBonus !== undefined) s.speedBonus = a.speedBonus;
       game.version++; break;
     }
+    case "tv_rotate": rotateTvToken(game); audit(game.id, "TV bağlantısı yenilendi"); break;
     case "end": game.phase = "final"; game.endedAt = now; game.version++; break;
   }
   afterChange(game);
@@ -87,7 +89,7 @@ export function runPlayerAction(game: Game, memberToken: string, raw: unknown) {
     case "handover": handOverCaptain(game, memberToken, a.to); break;
     case "heartbeat": heartbeat(game, memberToken, now, a.hidden); if (!a.hidden) return; break;
     case "wager": placeWager(game, memberToken, a.amount); break;
-    case "joker": useJoker(game, memberToken); break;
+    case "joker": activateJoker(game, memberToken); break;
     case "appeal": appeal(game, memberToken, a.note); break;
   }
   afterChange(game);

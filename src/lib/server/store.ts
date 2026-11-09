@@ -17,8 +17,8 @@ const g = globalThis as unknown as { __hub?: Hub };
 const hub: Hub = (g.__hub ??= { games: new Map(), byCode: new Map(), listeners: new Map(), timers: new Map(), auto: new Map(), idem: new Map(), hostDevices: new Map() });
 
 export function registerGame(game: Game): Game {
-  const MAX_LIVE = 5000;
-  if (hub.games.size >= MAX_LIVE) purgeOld(Date.now(), 6 * 3600_000);
+  purgeOld(Date.now());
+  if (hub.games.size >= 5000) purgeOld(Date.now(), 6 * 3600_000);
   const A = "ABCDEFGHJKLMNPRSTUVYZ23456789";
   while (hub.byCode.has(game.code)) game.code = Array.from({ length: 4 }, () => A[Math.floor(Math.random() * A.length)]).join("");
   hub.games.set(game.id, game); hub.byCode.set(game.code, game.id);
@@ -34,7 +34,16 @@ export function subscribe(id: string, fn: () => void) {
   set.add(fn);
   return () => { set!.delete(fn); };
 }
-export const notify = (id: string) => hub.listeners.get(id)?.forEach((fn) => fn());
+/**
+ * Yayınlar toplu yapılır: aynı oyun için 120 ms içindeki değişimler tek bir yayına birleşir.
+ * 200 telefon aynı anda cevap verince her cevap için 200 görünüm üretmek yerine tek tur yayın yapılır.
+ */
+const pendingFlush = new Set<string>();
+export function notify(id: string) {
+  if (pendingFlush.has(id)) return;
+  pendingFlush.add(id);
+  setTimeout(() => { pendingFlush.delete(id); hub.listeners.get(id)?.forEach((fn) => fn()); }, 120);
+}
 
 function scheduleLock(game: Game) {
   const old = hub.timers.get(game.id);

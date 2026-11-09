@@ -174,6 +174,7 @@ export default function HostPage({ params }: { params: Promise<{ id: string }> }
         <div>
           <p style={{ margin: 0 }}>Oyuncu bağlantısı: <strong>{joinUrl}</strong></p>
           <p style={{ margin: ".4rem 0" }}><a href={tvUrl} target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>TV ekranını aç</a> · <a href={`${tvUrl}&basit=1`} target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>Basit TV modu</a> · <a href={`${tvUrl}&ses=1`} target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>Sesli TV</a></p>
+          <p style={{ margin: ".4rem 0" }}><button className="btn btn-ghost" disabled={busy} onClick={() => confirm("TV bağlantısı yenilensin mi? Eski bağlantı kapanır.") && act({ type: "tv_rotate" })}>TV bağlantısını yenile</button></p>
           <p style={{ margin: ".4rem 0" }}><a href={`/panel/afis?kod=${view.code}`} target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>Afiş ve masa kartı</a></p>
           <p style={{ margin: 0, fontSize: ".95rem", opacity: .85 }}>Telefonlar sadece cevap içindir.</p>
         </div>

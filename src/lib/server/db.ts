@@ -3,7 +3,7 @@ import path from "node:path";
 import type { PlanId } from "@config/plans";
 import type { Brand, Question } from "@/lib/engine/types";
 
-export interface User { id: string; email: string; salt: string; hash: string; verified: boolean; verifyToken: string | null; venueId: string; role: "owner" | "host"; createdAt: number }
+export interface User { id: string; email: string; salt: string; hash: string; verified: boolean; verifyToken: string | null; venueId: string; role: "owner" | "host"; createdAt: number; resetToken?: string | null; resetExp?: number }
 export interface Schedule { id: string; title: string; weekday: number; time: string; remindEmail: boolean; lastReminded?: string }
 export interface GameRecord {
   gameId: string; at: number; teams: number; players: number; ranking: { name: string; score: number }[];

@@ -27,6 +27,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
       const send = () => {
         if (closed) return;
         const now = Date.now();
+        if ((role === "tv" && !eq(token, game.tvToken)) || (role === "host" && !eq(token, game.hostToken))) { closed = true; cleanup(); try { controller.close(); } catch {} return; }
         if (tick(game, now)) afterChange(game);
         let view: unknown;
         if (role === "host") {

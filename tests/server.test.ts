@@ -156,3 +156,32 @@ describe("hesap, plan, ödeme", () => {
     expect(v.history.at(-1)!.ranking[0].name).toBe("Takım 1");
   });
 });
+
+import { requestReset, resetPassword, deleteAccount } from "@/lib/server/auth";
+import { advance as adv, createTeam as ct, newGame as ng, tick as tk } from "@/lib/engine/game";
+describe("şifre sıfırlama, hesap silme, ilerletme", () => {
+  it("sıfırlama bağlantısı tek kullanımlık; eski şifre geçersiz; açık oturumlar kapanır", () => {
+    signup({ email: "r@b.co", password: "eski-sifre-123", venueName: "Reset Kafe" });
+    const u = Object.values(db.users).find((x) => x.email === "r@b.co")!; verifyEmail(u.verifyToken!);
+    expect("token" in login("r@b.co", "eski-sifre-123", "1.1.1.1")).toBe(true);
+    expect(requestReset("yok@yok.co")).toBeNull();
+    const link = requestReset("r@b.co")!; const t = link.split("sifirla=")[1];
+    expect(() => resetPassword(t, "kisa")).toThrow();
+    expect(resetPassword(t, "yeni-sifre-1234")).toBe(true);
+    expect(resetPassword(t, "baska-sifre-1234")).toBe(false);
+    expect("error" in login("r@b.co", "eski-sifre-123", "1.1.1.1")).toBe(true);
+    expect("token" in login("r@b.co", "yeni-sifre-1234", "1.1.1.1")).toBe(true);
+    expect(deleteAccount(u, "yanlis")).toBe(false);
+    expect(deleteAccount(u, "yeni-sifre-1234")).toBe(true);
+    expect(db.users[u.id]).toBeUndefined(); expect(db.venues[u.venueId]).toBeUndefined();
+  });
+  it("süre dolmuşken ilerlet yalnızca kilidi uygular (adım atlamaz)", () => {
+    const q = { id: "1", category: "T", kind: "choice" as const, text: "S?", options: ["A", "B", "C", "D"], correct: "A", accepted: [] };
+    const g = ng({ venueName: "T", questions: [q] });
+    ct(g, { nickname: "a", teamName: "T1", color: "#D64933", emoji: "⚽", now: 0 });
+    adv(g, 0); adv(g, 0);
+    adv(g, 999_999); // süre dolmuş
+    expect(g.phase).toBe("question_locked");
+    void tk;
+  });
+});

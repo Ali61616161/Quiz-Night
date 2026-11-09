@@ -166,7 +166,7 @@ export function placeWager(g: Game, memberToken: string, amount: number) {
   g.wagers[team.id] = amount; bump(g);
 }
 
-export function useJoker(g: Game, memberToken: string) {
+export function activateJoker(g: Game, memberToken: string) {
   const { team, member } = requireMember(g, memberToken);
   if (g.phase !== "question_open") throw new GameError("closed", "Joker sadece soru açıkken kullanılır.", 409);
   if (team.captainId !== member.id) throw new GameError("not_captain", "Jokeri sadece kaptan kullanır.", 403);
@@ -205,7 +205,8 @@ const needsIntro = (g: Game, i: number) => {
 };
 
 export function advance(g: Game, now: number) {
-  tick(g, now);
+  // Süre zaten dolduysa 'ilerlet' yalnızca kilidi uygular; bir adım atlanmaz.
+  if (tick(g, now)) return;
   const hasMore = g.qIndex < g.questions.length - 1;
   if (g.phase === "lobby" && g.teams.length < 1) throw new GameError("no_teams", "En az bir takım gerekli.");
   const to = nextPhase(g.phase, hasMore, needsIntro(g, g.qIndex + 1));
@@ -275,6 +276,8 @@ export function adjustScore(g: Game, teamId: string, delta: number) {
   if (!t) throw new GameError("no_team", "Takım yok.", 404);
   t.score += delta; bump(g);
 }
+
+export function rotateTvToken(g: Game) { g.tvToken = token(); bump(g); }
 
 export function ranking(g: Game) {
   return [...g.teams].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "tr"));

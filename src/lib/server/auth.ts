@@ -36,7 +36,7 @@ export function signup(input: z.infer<typeof signupSchema>) {
   const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const link = `${base}/api/auth/verify?token=${verifyToken}`;
   sendMail(input.email, "E-posta adresini doğrula", `Hesabını doğrulamak için bağlantıya tıkla: ${link}`);
-  return { ok: true, devVerifyUrl: process.env.NODE_ENV === "production" ? undefined : link } as const;
+  return { ok: true, devVerifyUrl: process.env.NODE_ENV !== "production" || process.env.EXPOSE_DEV_LINKS === "1" ? link : undefined } as const;
 }
 
 export function verifyEmail(tokenStr: string): boolean {
@@ -96,3 +96,34 @@ export function sameOrigin(req: Request): boolean {
 
 export function planOf(v: Venue) { return PLANS[v.status === "canceled" ? "free" : v.plan]; }
 export { audit };
+
+const pwSchema = z.string().min(10, "Şifre en az 10 karakter olmalı.").max(200);
+
+/** Şifre sıfırlama: kullanıcı var olsa da olmasa da aynı yanıt verilir (hesap sayımı yapılamaz). */
+export function requestReset(email: string) {
+  const u = Object.values(db.users).find((x) => x.email === email.trim().toLowerCase());
+  if (!u) return null;
+  u.resetToken = randomBytes(24).toString("base64url"); u.resetExp = Date.now() + 3600_000; save();
+  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const link = `${base}/giris?sifirla=${u.resetToken}`;
+  sendMail(u.email, "Şifre sıfırlama", `Şifreni sıfırlamak için (1 saat geçerli): ${link}`);
+  return link;
+}
+export function resetPassword(tokenStr: string, password: string) {
+  const u = Object.values(db.users).find((x) => x.resetToken && x.resetToken === tokenStr && (x.resetExp ?? 0) > Date.now());
+  if (!u) return false;
+  pwSchema.parse(password);
+  u.salt = randomBytes(16).toString("hex"); u.hash = hashPw(password, u.salt); u.resetToken = null; u.verified = true;
+  for (const [k, s2] of sessions) if (s2.userId === u.id) sessions.delete(k); // açık oturumlar kapanır
+  audit(u.email, "şifre sıfırlandı"); save();
+  return true;
+}
+/** Hesap ve mekan verisini siler (KVKK silme hakkı). */
+export function deleteAccount(user: User, password: string) {
+  const h = Buffer.from(hashPw(password, user.salt), "hex");
+  if (!timingSafeEqual(h, Buffer.from(user.hash, "hex"))) return false;
+  for (const [k, s2] of sessions) if (s2.userId === user.id) sessions.delete(k);
+  delete db.users[user.id]; delete db.venues[user.venueId];
+  audit(user.email, "hesap silindi"); save();
+  return true;
+}
