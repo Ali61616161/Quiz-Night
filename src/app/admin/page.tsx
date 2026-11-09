@@ -6,7 +6,7 @@ interface Overview {
   venues: { id: string; name: string; email: string; plan: string; effective: string; status: string; games: number }[];
   liveGames: number; abuse: { id: string; at: number; kind: string; detail: string; venueId: string | null }[];
   coupons: { code: string; percentOff: number; months: number; maxUses: number; uses: number; expires: number | null }[]; announcement: string;
-  reports: { id: string; questionId: string; text: string; reason: string }[]; drafts: number;
+  reports: { id: string; questionId: string; text: string; reason: string }[]; drafts: number; draftList: { id: string; text: string; correct: string; category: string }[];
   calibration: { id: string; text: string; current: number; suggested: number; rate: number; n: number }[]; audit: { at: number; who: string; what: string }[]; bank: { total: number };
 }
 
@@ -43,7 +43,8 @@ export default function Admin() {
         <div style={{ display: "flex", gap: ".5rem" }}><input className="input" value={ann} onChange={(e) => setAnn(e.target.value)} maxLength={300} /><button className="btn" onClick={() => run(() => api("/api/admin/announce", { text: ann }), "Duyuru güncellendi.")}>Yayınla</button></div></section>
 
       <section><h2 style={{ fontSize: "1.6rem" }}>Hatalı soru bildirimleri ({d.reports.length})</h2><ul style={{ paddingLeft: "1.1rem" }}>{d.reports.map((r) => <li key={r.id}>{r.text} — <em>{r.reason}</em></li>)}</ul></section>
-      <section><h2 style={{ fontSize: "1.6rem" }}>Zorluk kalibrasyonu önerileri ({d.calibration.length})</h2><ul style={{ paddingLeft: "1.1rem" }}>{d.calibration.map((r) => <li key={r.id}>{r.text}: {r.current} → {r.suggested} (doğru oranı %{Math.round(r.rate * 100)}, n={r.n})</li>)}</ul></section>
+      <section><h2 style={{ fontSize: "1.6rem" }}>Zorluk kalibrasyonu önerileri ({d.calibration.length})</h2><ul style={{ paddingLeft: "1.1rem" }}>{d.calibration.map((r) => <li key={r.id}>{r.text}: {r.current} → {r.suggested} (doğru oranı %{Math.round(r.rate * 100)}, n={r.n}) <button className="btn btn-ghost" onClick={() => run(() => api("/api/admin/calibration_apply", { id: r.id, difficulty: r.suggested }), "Zorluk güncellendi.")}>Uygula</button></li>)}</ul></section>
+      <section><h2 style={{ fontSize: "1.6rem" }}>AI taslak onay kuyruğu ({d.drafts})</h2><ul style={{ paddingLeft: "1.1rem" }}>{d.draftList.map((q) => <li key={q.id}>{q.category} · {q.text} → {q.correct} <button className="btn" onClick={() => run(() => api("/api/admin/draft_publish", { id: q.id }), "Genel havuza eklendi.")}>Genel havuza ekle</button> <button className="btn btn-ghost" onClick={() => run(() => api("/api/admin/draft_delete", { id: q.id }), "Silindi.")}>Sil</button></li>)}</ul></section>
       <section><h2 style={{ fontSize: "1.6rem" }}>Kötüye kullanım bayrakları ({d.abuse.length})</h2><ul style={{ paddingLeft: "1.1rem" }}>{d.abuse.map((a) => <li key={a.id}>{new Date(a.at).toLocaleString("tr-TR")} · {a.kind} · {a.detail}</li>)}</ul></section>
       <section><h2 style={{ fontSize: "1.6rem" }}>Denetim kaydı</h2><ul style={{ paddingLeft: "1.1rem" }}>{d.audit.map((a, i) => <li key={i}>{new Date(a.at).toLocaleString("tr-TR")} · {a.who} · {a.what}</li>)}</ul></section>
     </main>

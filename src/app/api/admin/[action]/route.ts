@@ -14,7 +14,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ action: string 
       venues: Object.values(db.venues).map((v) => ({ id: v.id, name: v.name, email: v.ownerEmail, plan: v.plan, effective: effectivePlan(v), status: v.status, games: v.history.length, createdAt: v.createdAt })),
       liveGames: liveGames().length, abuse: db.abuse.slice(-50).reverse(), coupons: Object.values(db.coupons), announcement: db.announcement,
       reports: db.reports.slice(-50).reverse().map((r) => ({ ...r, text: BANK.find((q) => q.id === r.questionId)?.text ?? db.drafts.find((q) => q.id === r.questionId)?.text ?? r.questionId })),
-      drafts: db.drafts.length, calibration: calibrationSuggestions(), audit: db.audit.slice(-50).reverse(),
+      drafts: db.drafts.length, draftList: db.drafts.slice(0, 50).map((d) => ({ id: d.id, text: d.text, correct: d.correct, category: d.category })), calibration: calibrationSuggestions(), audit: db.audit.slice(-50).reverse(),
       bank: { total: BANK.length },
     });
   }
@@ -39,6 +39,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
       v.plan = z.enum(["free", "starter", "pro", "brand"]).parse(b.plan); v.status = "active"; audit(s.user.email, `admin plan: ${v.id} → ${v.plan}`); save(); return json({ ok: true });
     }
     if (action === "draft_list") return json({ drafts: db.drafts.slice(0, 100) });
+    if (action === "draft_publish") {
+      const i = db.drafts.findIndex((d) => d.id === String(b.id)); if (i < 0) return fail(404, "nf", "Taslak yok.");
+      const d = db.drafts.splice(i, 1)[0]; d.status = "approved"; db.globalQuestions.push(d); audit(s.user.email, `genel havuza eklendi: ${d.id}`); save(); return json({ ok: true });
+    }
+    if (action === "draft_delete") { db.drafts = db.drafts.filter((d) => d.id !== String(b.id)); save(); return json({ ok: true }); }
+    if (action === "calibration_apply") {
+      const id = String(b.id), d = z.union([z.literal(1), z.literal(2), z.literal(3)]).parse(b.difficulty);
+      db.diffOverrides[id] = d; const q = BANK.find((x) => x.id === id); if (q) q.difficulty = d; audit(s.user.email, `zorluk: ${id} → ${d}`); save(); return json({ ok: true });
+    }
     return fail(404, "nf", "Bulunamadı.");
   } catch (e) { return errorResponse(e); }
 }

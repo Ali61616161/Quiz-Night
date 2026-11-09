@@ -49,7 +49,7 @@ h1, h2, h3, .display { font-family: var(--font-display); font-weight: 700; line-
 }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn-ghost { background: transparent; color: var(--fildisi); border-color: var(--fildisi); }
-.btn-danger { background: var(--sinyal); color: #fff; }
+.btn-danger { background: #b73b27; color: #fff; }
 .btn-fis { background: var(--fildisi); color: var(--murekkep); }
 
 .input {
@@ -94,3 +94,7 @@ h1, h2, h3, .display { font-family: var(--font-display); font-weight: 700; line-
   .flip-d .f1, .flip-d .f2 { animation: none; display: none; }
 }
 @media (hover: hover) { .btn:not(:disabled):hover { filter: brightness(1.08); } }
+
+.lang-spacer { height: 0; }
+@media (max-width: 640px) { .lang-spacer { height: 46px; } }
+@media print { .lang-spacer, [role=group][aria-label=Language] { display: none !important; } }

@@ -54,7 +54,7 @@ function base(g: Game, now: number) {
   return {
     serverNow: now, version: g.version, code: g.code, venueName: g.venueName, phase: g.phase, mode: g.mode,
     openedAt: g.openedAt, deadline: g.deadline, durationMs: g.settings.durationMs,
-    brand: g.brand, watermark: g.plan === "free", paused: g.paused,
+    lang: g.lang, brand: g.brand, watermark: g.plan === "free", paused: g.paused,
     question: questionView(g, false), teams: board(g, now),
   };
 }

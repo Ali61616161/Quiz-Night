@@ -20,6 +20,8 @@ Sıfırdan: `cp .env.example .env.local` ve değerleri doldur. Yalnızca `npm ru
 | `npm run typecheck` / `npm run lint` | Statik kontrol |
 | `npm run build && DB_MEMORY=1 EXPOSE_DEV_LINKS=1 NEXT_PUBLIC_APP_URL=http://localhost:3100 npx next start -p 3100` | E2E için sunucu |
 | `npm run e2e` | Playwright: host + TV + 2 takım (4 telefon), kaptan düşmesi/devri, itiraz, plan kapısı |
+| `npm run e2e:i18n` | İngilizce arayüz taraması: tüm ekranlar + ekran görüntüleri, kalan Türkçe metin = hata |
+| `node e2e/a11y.mjs` | axe-core erişilebilirlik taraması |
 | `npm run e2e:security` | 25 kontrollü güvenlik ve işlev denetimi (canlı sunucuya) |
 | `npm run loadtest` | 40 takım / 200 oyuncu / TV / host yük testi |
 
@@ -30,4 +32,10 @@ Sıfırdan: `cp .env.example .env.local` ve değerleri doldur. Yalnızca `npm ru
 - Canlı oyunlar **bellek içi**; hesaplar/içerik/geçmiş `DATA_DIR/db.json` (tek süreç). Bkz. KNOWN_LIMITS.md → Ölçekleme.
 - Plan kapıları: `config/plans.ts` + `can()`; sunucuda uygulanır.
 
-Belgeler: `DESIGN.md`, `DECISIONS.md`, `DEPLOY.md`, `KNOWN_LIMITS.md`, `TEST_REPORT.md`.
+Belgeler: `SUNUM.md` (mekanlara nasıl sunulur), `DESIGN.md`, `DECISIONS.md`, `DEPLOY.md`, `KNOWN_LIMITS.md`, `TEST_REPORT.md`.
+
+## Dil (Türkçe / English)
+Sağ üstteki **TR | EN** düğmesi tüm arayüzü değiştirir (kayıtlı tercih; oyun İngilizce açıldıysa TV ve telefonlar otomatik İngilizceye geçer). Panelde "Soru dili" ile oyunun soru dili seçilir: Türkçe havuz 7.400+ soru (17 konu); İngilizce havuz 2.600+ soru (coğrafya, bilim, futbol, spor, film/dizi, müzik, oyun, edebiyat, teknoloji).
+
+## Docker
+`docker compose up -d --build` (`.env` gerekir; veri `quizhane-data` birimindedir).

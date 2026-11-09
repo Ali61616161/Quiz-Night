@@ -6,6 +6,7 @@ import { fail, json, requireVenue } from "@/lib/server/api";
 import { audit, db, save } from "@/lib/server/db";
 import { sanitizeSvg, sniffImage, MAX_LOGO } from "@/lib/server/svg";
 import { sendMail } from "@/lib/server/mail";
+import { inviteHost, removeMember } from "@/lib/server/auth";
 import { closeSeason, effectivePlan, leagueTable, monthKey, venueStats } from "@/lib/server/venue";
 import { contrast } from "@/lib/brand";
 import { parseCsv } from "@/lib/csv";
@@ -34,6 +35,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ action: string 
       features: [...P.features], aiQuota: P.aiQuotaMonthly, aiUsed: v.aiUsed.month === monthKey() ? v.aiUsed.n : 0, schedules: v.schedules,
       seenCount: v.seen.length, history: v.history.slice(-10).reverse().map((h) => ({ gameId: h.gameId, at: h.at, teams: h.teams, players: h.players, winner: h.ranking[0]?.name ?? "" })),
     });
+    case "team": return json({ me: s.user.id, role: s.user.role, members: Object.values(db.users).filter((u) => u.venueId === v.id).map((u) => ({ id: u.id, email: u.email, role: u.role, verified: u.verified })) });
     case "questions": return json({ custom: v.customQuestions, drafts: db.drafts.filter((d) => (d as Question & { venueId?: string }).venueId === v.id) });
     case "stats": return can(plan, "stats") ? json(venueStats(v)) : fail(402, "plan", "İstatistikler Pro planında.");
     case "league": return can(plan, "league") ? json({ season: v.league.season, table: leagueTable(v), seasons: v.league.seasons }) : fail(402, "plan", "Lig Marka planında.");
@@ -45,6 +47,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
   try {
     const { action } = await ctx.params;
     const s = requireVenue(req, { write: true, raw: action === "logo", rate: action === "ai" ? "ai" : action === "logo" ? "upload" : "api" }); if (s instanceof Response) return s;
+    const OWNER_ONLY = ["rename", "brand", "logo", "league_close", "invite", "member_remove"];
+    if (OWNER_ONLY.includes(action) && s.user.role !== "owner") return fail(403, "forbidden", "Bu işlem yalnızca mekan sahibine açıktır.");
     const v = s.venue; const plan = effectivePlan(v);
     const body = action === "logo" ? null : await req.json();
     switch (action) {
@@ -100,6 +104,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
         const b2 = z.object({ subject: z.string().trim().min(3).max(100), message: z.string().trim().min(10).max(2000) }).parse(body);
         sendMail(process.env.SUPPORT_EMAIL || "destek@localhost", `[Destek] ${b2.subject}`, `${v.name} (${s.user.email}, ${PLANS[plan].name}): ${b2.message}`); return json({ ok: true });
       }
+      case "invite": { const r = inviteHost(s.user, z.string().email().max(120).parse(body.email)); return "error" in r ? fail(409, "exists", String(r.error)) : json(r); }
+      case "member_remove": return removeMember(s.user, String(body.id)) ? json({ ok: true }) : fail(404, "nf", "Üye bulunamadı.");
       case "schedule_delete": { v.schedules = v.schedules.filter((x) => x.id !== body.id); save(); return json({ ok: true }); }
       case "league_close": { if (!can(plan, "league")) return fail(402, "plan", "Lig Marka planında."); closeSeason(v); return json({ ok: true }); }
       case "logo": {

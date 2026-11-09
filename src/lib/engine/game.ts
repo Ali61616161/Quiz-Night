@@ -31,12 +31,12 @@ export function allowedModesFor(plan: PlanId): TeamMode[] {
 
 export function newGame(opts: {
   venueName: string; questions: Question[]; code?: string; settings?: Partial<Settings>;
-  plan?: PlanId; venueId?: string | null; brand?: Brand | null; now?: number;
+  plan?: PlanId; venueId?: string | null; brand?: Brand | null; now?: number; lang?: "tr" | "en";
 }): Game {
   const plan = opts.plan ?? "free";
   return {
     id: token().slice(0, 12), code: opts.code ?? pick(ROOM_ALPHABET, 4),
-    venueId: opts.venueId ?? null, venueName: opts.venueName, plan, brand: opts.brand ?? null,
+    venueId: opts.venueId ?? null, venueName: opts.venueName, plan, brand: opts.brand ?? null, lang: opts.lang ?? "tr",
     hostToken: token(), tvToken: token(), phase: "lobby", qIndex: 0, mode: "captain",
     questions: opts.questions, openedAt: null, deadline: null,
     settings: { ...DEFAULT_SETTINGS, ...opts.settings },

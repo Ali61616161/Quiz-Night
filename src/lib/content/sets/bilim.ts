@@ -38,7 +38,7 @@ const UNITS = [
 const ANIMALS = [
   "Yunus|Memeli", "Yarasa|Memeli", "Balina|Memeli", "Kanguru|Memeli", "Penguen|Kuş", "Devekuşu|Kuş", "Kivi|Kuş", "Baykuş|Kuş", "Timsah|Sürüngen", "Deniz kaplumbağası|Sürüngen", "Kertenkele|Sürüngen", "Kobra|Sürüngen",
   "Kurbağa|Amfibi", "Semender|Amfibi", "Köpekbalığı|Balık", "Som balığı|Balık", "Denizatı|Balık", "Kelebek|Böcek", "Bal arısı|Böcek", "Karınca|Böcek", "Uğur böceği|Böcek", "Örümcek|Örümceksi",
-  "Akrep|Örümceksi", "Yengeç|Kabuklu", "Istakoz|Kabuklu", "Ahtapot|Yumuşakça", "Salyangoz|Yumuşakça", "Denizyıldızı|Derisidikenli", "Kaplan|Memeli", "Karakartal|Kuş",
+  "Akrep|Örümceksi", "Yengeç|Kabuklu", "Istakoz|Kabuklu", "Ahtapot|Yumuşakça", "Salyangoz|Yumuşakça", "Denizyıldızı|Derisidikenli", "Kaplan|Memeli", "Karakartal|Kuş", "Zebra|Memeli", "Fil|Memeli", "Aslan|Memeli", "Kedi|Memeli", "Köpek|Memeli", "At|Memeli", "Karga|Kuş", "Serçe|Kuş", "Papağan|Kuş", "Flamingo|Kuş", "Yılan|Sürüngen", "Bukalemun|Sürüngen", "Hamsi|Balık", "Orkinos|Balık", "Sivrisinek|Böcek", "Çekirge|Böcek", "Cırcır böceği|Böcek", "Midye|Yumuşakça", "Kalamar|Yumuşakça", "Karides|Kabuklu", "Yengeç|Kabuklu",
 ];
 
 // hayvan|yaşam alanı/anavatan
@@ -67,8 +67,8 @@ export const BILIM: FactSet[] = [
     { t: "{0} büyüklüğünün birimi nedir?", a: 1, by: [0] },
     { t: "{1} hangi büyüklüğün birimidir?", a: 0, by: [1] },
   ] },
-  { id: "hayvan", cat: "Bilim", sub: "Biyoloji: hayvanlar", diff: 1, rows: ANIMALS, asks: [{ t: "{0} hangi hayvan sınıfında yer alır?", a: 1, by: [0], choice: true }] },
-  { id: "yasam", cat: "Bilim", sub: "Biyoloji: hayvanlar", diff: 1, rows: ANIMAL_HOME, asks: [{ t: "{0} hangi bölgeyle özdeşleşmiştir?", a: 1, by: [0], choice: true }] },
+  { id: "hayvan", cat: "Doğa ve Hayvanlar", sub: "Biyoloji: hayvanlar", diff: 1, rows: ANIMALS, asks: [{ t: "{0} hangi hayvan sınıfında yer alır?", a: 1, by: [0], choice: true }] },
+  { id: "yasam", cat: "Doğa ve Hayvanlar", sub: "Biyoloji: hayvanlar", diff: 1, rows: ANIMAL_HOME, asks: [{ t: "{0} hangi bölgeyle özdeşleşmiştir?", a: 1, by: [0], choice: true }] },
 ];
 
 export const BILIM_SINGLES: SingleSet[] = [{

@@ -27,6 +27,7 @@ function numericDistractors(v: number, r: () => number): string[] {
 }
 
 import { ESTIMATES, ORDERINGS } from "./facts";
+import { ASK_EN, hasTurkish, toEn } from "./en";
 import { estimates, expand, expandSingles, matchings, orderings } from "./gen";
 import { BILIM, BILIM_SINGLES } from "./sets/bilim";
 import { DIZIFILM, DIZIFILM_SINGLES } from "./sets/dizifilm";
@@ -42,9 +43,12 @@ import { SPOR, SPOR_SINGLES } from "./sets/spor";
 import { TARIH, TARIH_SINGLES } from "./sets/tarih";
 import { YEMEK, YEMEK_SINGLES } from "./sets/yemek";
 import { YEREL, YEREL_SINGLES } from "./sets/yerel";
+import { DOGA, DOGA_SINGLES } from "./sets/doga";
+import { GUNDEM, GUNDEM_SINGLES } from "./sets/gundem";
+import { TEKNOLOJI, TEKNOLOJI_SINGLES } from "./sets/teknoloji";
 
-const ALL_SETS = [...GEO, ...TARIH, ...BILIM, ...FUTBOL, ...SPOR, ...DIZIFILM, ...MUZIK, ...EDEBIYAT, ...SANAT, ...YEMEK, ...OYUN, ...KAMPUS, ...YEREL, ...GENEL];
-const ALL_SINGLES = [...GEO_SINGLES, ...TARIH_SINGLES, ...BILIM_SINGLES, ...FUTBOL_SINGLES, ...SPOR_SINGLES, ...DIZIFILM_SINGLES, ...MUZIK_SINGLES, ...EDEBIYAT_SINGLES, ...SANAT_SINGLES, ...YEMEK_SINGLES, ...OYUN_SINGLES, ...KAMPUS_SINGLES, ...YEREL_SINGLES, ...GENEL_SINGLES];
+export const ALL_SETS = [...GEO, ...TARIH, ...BILIM, ...FUTBOL, ...SPOR, ...DIZIFILM, ...MUZIK, ...EDEBIYAT, ...SANAT, ...YEMEK, ...OYUN, ...KAMPUS, ...YEREL, ...GENEL, ...GUNDEM, ...TEKNOLOJI, ...DOGA];
+const ALL_SINGLES = [...GEO_SINGLES, ...TARIH_SINGLES, ...BILIM_SINGLES, ...FUTBOL_SINGLES, ...SPOR_SINGLES, ...DIZIFILM_SINGLES, ...MUZIK_SINGLES, ...EDEBIYAT_SINGLES, ...SANAT_SINGLES, ...YEMEK_SINGLES, ...OYUN_SINGLES, ...KAMPUS_SINGLES, ...YEREL_SINGLES, ...GENEL_SINGLES, ...GUNDEM_SINGLES, ...TEKNOLOJI_SINGLES, ...DOGA_SINGLES];
 
 function build(): Question[] {
   const out: Question[] = [...expand(ALL_SETS), ...expandSingles(ALL_SINGLES)];
@@ -73,6 +77,12 @@ function build(): Question[] {
     ...matchings(byId("kulup"), { text: "Kulüpleri ülkeleriyle eşleştir.", left: 0, right: 1, k: 6 }),
     ...matchings(byId("sporcu"), { text: "Sporcuları spor dallarıyla eşleştir.", left: 0, right: 1, k: 6 }),
     ...matchings(byId("muze"), { text: "Müzeleri şehirleriyle eşleştir.", left: 0, right: 1, k: 6 }),
+    ...orderings(byId("gundem"), { label: () => "Olayları eskiden yeniye doğru sırala.", item: 0, num: 1, k: 24, gap: 2 }),
+    ...orderings(byId("sirket"), { label: () => "Şirketleri kuruluş yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 6, gap: 4 }),
+    ...orderings(byId("lansman"), { label: () => "Teknolojileri ortaya çıkış yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 8, gap: 4 }),
+    ...matchings(byId("sirket"), { text: "Şirketleri kurucularıyla eşleştir.", left: 0, right: 2, k: 4 }),
+    ...matchings(byId("kisaltma"), { text: "Kısaltmaları açılımlarıyla eşleştir.", left: 0, right: 1, k: 6 }),
+    ...matchings(byId("progdil"), { text: "Programlama dillerini geliştiricileriyle eşleştir.", left: 0, right: 1, k: 3 }),
     ...matchings(byId("bulus"), { text: "Buluşları mucitleriyle eşleştir.", left: 0, right: 1, k: 4 }),
   );
   out.push(
@@ -83,6 +93,8 @@ function build(): Question[] {
     ...estimates(byId("konsol"), { t: (x) => `${x} hangi yıl piyasaya çıkmıştır? (En yakın tahmin kazanır)`, item: 0, num: 2, k: 10 }),
     ...estimates(byId("dogum"), { t: (x) => `${x} hangi yıl doğmuştur? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
     ...estimates(byId("kdn"), { t: (x) => `${x} hangi yıl kurulmuştur? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
+    ...estimates(byId("gundem"), { t: (x) => `${x} hangi yıl gerçekleşmiştir? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 40 }),
+    ...estimates(byId("sirket"), { t: (x) => `${x} hangi yıl kurulmuştur? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
     ...estimates(byId("element"), { t: (x) => `${x} elementinin atom numarası kaçtır? (En yakın tahmin kazanır)`, item: 0, num: 2, k: 20 }),
   );
   // Elle yazılmış sıralama/tahmin soruları
@@ -92,13 +104,24 @@ function build(): Question[] {
   const seen = new Set<string>(); const uniq: Question[] = [];
   for (const q of out) {
     if (q.kind === "ordering" && q.items!.length < 3) continue;
-    const key = q.kind === "matching" || q.kind === "ordering" ? q.id : normalizeTr(q.text) + "|" + normalizeTr(q.correct);
+    const key = q.kind === "matching" || q.kind === "ordering" ? q.id : normalizeTr(q.text);
     if (seen.has(key)) continue; seen.add(key); uniq.push(q);
   }
   return uniq.filter((q, i, arr) => arr.findIndex((x) => x.id === q.id) === i);
 }
 
 export const BANK: Question[] = build();
+
+/** İngilizce havuz: aynı olgu tablolarından İngilizce şablon ve sözlükle üretilir; güvenilir çevirisi olmayan satırlar atlanır. */
+function buildEn(): Question[] {
+  const out = expand(ALL_SETS, "en", { ask: ASK_EN, toEn });
+  const seen = new Set<string>();
+  return out.filter((q) => { if (hasTurkish(q.text) || hasTurkish(q.correct) || (q.options ?? []).some(hasTurkish)) return false; const k = normalizeTr(q.text); if (seen.has(k)) return false; seen.add(k); return true; });
+}
+export const BANK_EN: Question[] = buildEn();
+
+/** Kalıcı zorluk düzeltmeleri (süper admin onayı) açılışta uygulanır. */
+export function applyDifficultyOverrides(o: Record<string, 1 | 2 | 3>) { for (const q of BANK) if (o[q.id]) q.difficulty = o[q.id]; }
 export const bankById = new Map(BANK.map((q) => [q.id, q]));
 
 export type TemplateId = "classic" | "themed" | "quick" | "bilbakalim";
@@ -143,6 +166,9 @@ export const THEMES: Record<string, { name: string; categories: string[] }> = {
   kampus: { name: "Üniversite hayatı", categories: ["Üniversite/Kampüs"] },
   yerel: { name: "Yerel (şehir ve İstanbul)", categories: ["Yerel"] },
   genel: { name: "Genel kültür", categories: ["Genel Kültür"] },
+  gundem: { name: "Gündem (2000-2026)", categories: ["Gündem"] },
+  teknoloji: { name: "Teknoloji", categories: ["Teknoloji"] },
+  doga: { name: "Doğa ve hayvanlar", categories: ["Doğa ve Hayvanlar"] },
   "2000ler": { name: "Eğlence karması (dizi, film, müzik, futbol)", categories: ["Dizi/Film", "Müzik", "Futbol"] },
 };
 
@@ -154,15 +180,19 @@ export interface Pool { all: Question[]; seen: Set<string> }
  */
 export function buildNight(opts: {
   template: TemplateId; theme?: string; seen: Set<string>; allowed: { kinds: Set<Question["kind"]>; rounds: Set<RoundType>; image: boolean };
-  extra?: Question[]; seed?: string;
+  extra?: Question[]; seed?: string; lang?: "tr" | "en";
 }): { questions: Question[]; low: boolean } {
   const tpl = TEMPLATES[opts.template];
   const r = rng(opts.seed ?? String(Math.random()));
-  const cats = opts.theme ? THEMES[opts.theme]?.categories : undefined;
-  const pool = [...BANK, ...(opts.extra ?? [])].filter((q) => (q.status ?? "approved") === "approved" && (opts.allowed.image || !q.image) && opts.allowed.kinds.has(q.kind));
+  const base = opts.lang === "en" ? BANK_EN : BANK;
+  let cats = opts.theme ? THEMES[opts.theme]?.categories : undefined;
+  // İngilizce havuzda bir konu yeterince soru içermiyorsa karışık havuza geçilir (host'a düşük havuz uyarısı gider)
+  const thin = Boolean(cats && base.filter((q) => cats!.includes(q.category)).length < 60);
+  if (thin) cats = undefined;
+  const pool = [...base, ...(opts.extra ?? [])].filter((q) => (q.status ?? "approved") === "approved" && (opts.allowed.image || !q.image) && opts.allowed.kinds.has(q.kind));
   const used = new Set<string>();
   const questions: Question[] = [];
-  let low = false;
+  let low = thin;
   tpl.slots.forEach((slot, si) => {
     const round: RoundType = opts.allowed.rounds.has(slot.round) ? slot.round : "all";
     const kinds = slot.kinds.filter((k) => opts.allowed.kinds.has(k));

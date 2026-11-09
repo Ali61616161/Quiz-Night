@@ -71,6 +71,7 @@ export interface Game {
   venueName: string;
   plan: PlanId;
   brand: Brand | null;
+  lang: "tr" | "en";
   hostToken: string;
   tvToken: string;
   phase: Phase;

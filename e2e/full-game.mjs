@@ -56,7 +56,7 @@ await a2.screenshot({ path: `${SHOTS}/phone-member-question.png` });
 
 // Doğru cevabı host panelinden oku (host cevabı görür, oyuncular görmez)
 const correct = (await host.getByText(/^Doğru cevap:/).first().innerText()).replace("Doğru cevap: ", "").trim();
-const optionButtons = async (page) => (await page.locator("button[aria-pressed]").allInnerTexts()).map((t) => t.replace(/^[●○]\s*/, "").trim());
+const optionButtons = async (page) => (await page.locator("main button[aria-pressed]").allInnerTexts()).map((t) => t.replace(/^[●○]\s*/, "").trim());
 const opts = await optionButtons(a1);
 assert.ok(opts.includes(correct), `şıklarda doğru cevap olmalı: ${correct} / ${opts}`);
 const wrong = opts.find((o) => o !== correct);

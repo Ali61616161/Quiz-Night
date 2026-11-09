@@ -14,7 +14,7 @@ interface Info {
   schedules: { id: string; title: string; weekday: number; time: string }[];
   history: { gameId: string; at: number; teams: number; players: number; winner: string }[];
 }
-const TABS = ["Oyun", "Sorular", "Takvim", "İstatistik", "Lig", "Marka", "Abonelik", "Destek"] as const;
+const TABS = ["Oyun", "Sorular", "Takvim", "İstatistik", "Lig", "Marka", "Ekip", "Abonelik", "Destek"] as const;
 type Tab = (typeof TABS)[number];
 const DAYS = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
 
@@ -45,6 +45,7 @@ export default function Panel() {
       {tab === "İstatistik" && <StatsTab {...props} />}
       {tab === "Lig" && <LeagueTab {...props} />}
       {tab === "Marka" && <BrandTab {...props} />}
+      {tab === "Ekip" && <TeamTab {...props} />}
       {tab === "Abonelik" && <BillingTab {...props} />}
       {tab === "Destek" && <SupportTab {...props} />}
     </main>
@@ -55,12 +56,12 @@ type P = { info: Info; has: (f: string) => boolean; flash: (m: string) => void; 
 function Locked({ plan, text }: { plan: string; text: string }) { return <p className="fis" style={{ margin: 0 }}>{text} <strong>{plan}</strong> planında açılır. Abonelik sekmesinden yükselt. Veriler silinmez.</p>; }
 
 function GameTab({ info, has, flash }: P) {
-  const [template, setTemplate] = useState("classic"); const [theme, setTheme] = useState(""); const [mode, setMode] = useState("captain"); const [auto, setAuto] = useState(false); const [dur, setDur] = useState(30);
+  const [template, setTemplate] = useState("classic"); const [theme, setTheme] = useState(""); const [mode, setMode] = useState("captain"); const [auto, setAuto] = useState(false); const [dur, setDur] = useState(30); const [lang, setLang] = useState<"tr" | "en">(typeof localStorage !== "undefined" && localStorage.getItem("lang") === "en" ? "en" : "tr");
   const [busy, setBusy] = useState(false);
   const start = async () => {
     setBusy(true);
     try {
-      const j = await api<{ id: string; hostToken: string; poolLow: boolean }>("/api/games", { template, theme: template === "themed" ? theme || "futbol" : undefined, teamMode: mode, autoHost: auto, durationSec: dur });
+      const j = await api<{ id: string; hostToken: string; poolLow: boolean }>("/api/games", { template, theme: template === "themed" ? theme || "futbol" : undefined, teamMode: mode, autoHost: auto, durationSec: dur, lang });
       if (j.poolLow) flash("Soru havuzu azalıyor: yeni soru ekle ya da AI ile üret.");
       location.href = `/host/${j.id}?t=${encodeURIComponent(j.hostToken)}`;
     } catch (e) { flash((e as Error).message); setBusy(false); }
@@ -69,15 +70,16 @@ function GameTab({ info, has, flash }: P) {
     <section style={{ display: "grid", gap: ".8rem" }}>
       <h2 style={{ fontSize: "1.6rem" }}>Gece şablonu</h2>
       <div style={{ display: "grid", gap: ".5rem" }}>
-        {[["classic", "Klasik gece", "5 tur karışık konu + tahmin + final bahis sorusu"], ["themed", "Tematik gece", "Tek konu seç: 14 konudan biri"], ["quick", "Hızlı gece (45 dk)", "3 tur, hız turu dahil"], ["bilbakalim", "Bil Bakalım turu", "Kısa ve hızlı tek tur"]].map(([id, n, d]) => (
+        {[["classic", "Klasik gece", "5 tur karışık konu + tahmin + final bahis sorusu"], ["themed", "Tematik gece", "Tek konu seç: 17 konudan biri"], ["quick", "Hızlı gece (45 dk)", "3 tur, hız turu dahil"], ["bilbakalim", "Bil Bakalım turu", "Kısa ve hızlı tek tur"]].map(([id, n, d]) => (
           <button key={id} className={`btn ${template === id ? "" : "btn-ghost"}`} style={{ justifyContent: "flex-start", textAlign: "left", flexDirection: "column", alignItems: "flex-start", padding: ".6rem 1rem" }} aria-pressed={template === id} onClick={() => setTemplate(id)}><strong>{n}</strong><span style={{ fontWeight: 400 }}>{d}</span></button>
         ))}
       </div>
-      {template === "themed" && <label>Tema<select className="input" value={theme} onChange={(e) => setTheme(e.target.value)}>{[["cografya", "Coğrafya"], ["tarih", "Tarih"], ["bilim", "Bilim"], ["futbol", "Futbol"], ["spor", "Spor"], ["dizifilm", "Dizi/Film"], ["muzik", "Müzik"], ["edebiyat", "Edebiyat"], ["sanat", "Sanat"], ["yemek", "Yemek"], ["oyun", "Oyun"], ["kampus", "Üniversite hayatı"], ["yerel", "Yerel (şehir ve İstanbul)"], ["genel", "Genel kültür"], ["2000ler", "Eğlence karması"]].map(([v, n]) => <option key={v} value={v}>{n}</option>)}</select></label>}
+      {template === "themed" && <label>Tema<select className="input" value={theme} onChange={(e) => setTheme(e.target.value)}>{[["cografya", "Coğrafya"], ["tarih", "Tarih"], ["bilim", "Bilim"], ["futbol", "Futbol"], ["spor", "Spor"], ["dizifilm", "Dizi/Film"], ["muzik", "Müzik"], ["edebiyat", "Edebiyat"], ["sanat", "Sanat"], ["yemek", "Yemek"], ["oyun", "Oyun"], ["kampus", "Üniversite hayatı"], ["yerel", "Yerel (şehir ve İstanbul)"], ["genel", "Genel kültür"], ["gundem", "Gündem (2000-2026)"], ["teknoloji", "Teknoloji"], ["doga", "Doğa ve hayvanlar"], ["2000ler", "Eğlence karması"]].map(([v, n]) => <option key={v} value={v}>{n}</option>)}</select></label>}
       <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", alignItems: "center" }}>
         <span>Takım modu:</span>
         {[["captain", "Kaptan", true], ["individual", "Bireysel", has("mode_individual")], ["majority", "Çoğunluk", has("mode_majority")]].map(([v, n, ok]) => <button key={String(v)} className={`btn ${mode === v ? "" : "btn-ghost"}`} disabled={!ok} onClick={() => setMode(String(v))}>{String(n)}{ok ? "" : " (kilitli)"}</button>)}
       </div>
+      <label>Soru dili<select className="input" value={lang} onChange={(e) => setLang(e.target.value as "tr" | "en")}><option value="tr">Türkçe (tüm konular)</option><option value="en">English (Geography, Science, Football, Sports, Film/TV, Music, Games, Literature, Technology)</option></select></label>
       <label>Soru süresi (sn)<input className="input" type="number" min={10} max={120} value={dur} onChange={(e) => setDur(Number(e.target.value))} /></label>
       <label style={{ display: "flex", gap: ".5rem", alignItems: "center", minHeight: 44 }}><input type="checkbox" checked={auto} disabled={!has("auto_host")} onChange={(e) => setAuto(e.target.checked)} style={{ width: 22, height: 22 }} /> Auto-Host (süre, kilit, açıklama ve geçiş otomatik){!has("auto_host") && " · Başlangıç planında"}</label>
       <button className="btn" style={{ minHeight: 56 }} onClick={start} disabled={busy}>Geceyi başlat</button>
@@ -283,6 +285,27 @@ function SupportTab({ flash }: P) {
         <textarea className="input" style={{ minHeight: 120, padding: ".5rem" }} placeholder="Mesaj" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} required minLength={10} />
         <button className="btn">Gönder</button>
       </form>
+    </section>
+  );
+}
+
+function TeamTab({ flash }: P) {
+  const [d, setD] = useState<{ me: string; role: string; members: { id: string; email: string; role: string; verified: boolean }[] } | null>(null);
+  const [email, setEmail] = useState("");
+  const load = useCallback(() => api<NonNullable<typeof d>>("/api/venue/team").then(setD), []);
+  useEffect(() => { load(); }, [load]);
+  if (!d) return <p>Yükleniyor…</p>;
+  return (
+    <section style={{ display: "grid", gap: ".6rem", maxWidth: 520 }}>
+      <h2 style={{ fontSize: "1.6rem" }}>Ekip</h2>
+      <p style={{ margin: 0 }}>Sahip her şeyi yönetir. Host oyun açar ve yönetir; abonelik, marka ve ekip ayarlarına erişemez.</p>
+      <ul style={{ margin: 0, paddingLeft: "1.1rem" }}>{d.members.map((m) => <li key={m.id}>{m.email} · {m.role === "owner" ? "sahip" : "host"}{m.verified ? "" : " · davet bekliyor"} {d.role === "owner" && m.role !== "owner" && <button className="btn btn-ghost" onClick={async () => { await api("/api/venue/member_remove", { id: m.id }); load(); }}>Çıkar</button>}</li>)}</ul>
+      {d.role === "owner" && (
+        <form style={{ display: "grid", gap: ".5rem" }} onSubmit={async (e) => { e.preventDefault(); try { const r = await api<{ devLink?: string }>("/api/venue/invite", { email }); flash("Davet gönderildi." + (r.devLink ? ` (Geliştirme: ${r.devLink})` : "")); setEmail(""); load(); } catch (e2) { flash((e2 as Error).message); } }}>
+          <input className="input" type="email" placeholder="Host e-postası" value={email} onChange={(e) => setEmail(e.target.value)} required autoCapitalize="off" />
+          <button className="btn">Host davet et</button>
+        </form>
+      )}
     </section>
   );
 }

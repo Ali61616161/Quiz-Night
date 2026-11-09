@@ -1,4 +1,5 @@
 "use client";
+import { announceGameLang } from "@/components/I18n";
 import { use, useEffect, useRef, useState } from "react";
 import { Flip } from "@/components/Flip";
 import { Pul } from "@/components/Pul";
@@ -31,6 +32,7 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
   }, []);
   useWakeLock();
   const { view, connected, serverNow } = useGameStream<TvView>(id, "tv", token);
+  useEffect(() => { announceGameLang((view as { lang?: "tr" | "en" } | null)?.lang); }, [(view as { lang?: string } | null)?.lang]);
 
   // Sesler (isteğe bağlı): son 5 sn tik, cevap açılınca zil
   const lastPhase = useRef("");

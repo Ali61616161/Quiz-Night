@@ -127,3 +127,24 @@ export function deleteAccount(user: User, password: string) {
   audit(user.email, "hesap silindi"); save();
   return true;
 }
+
+/** Ekibe host ekler: hesap oluşturulur, kişi e-postadaki bağlantıyla şifresini belirler. */
+export function inviteHost(owner: User, email: string) {
+  const e = email.trim().toLowerCase();
+  if (Object.values(db.users).some((u) => u.email === e)) return { error: "Bu e-posta zaten kayıtlı." } as const;
+  const venue = db.venues[owner.venueId];
+  const members = Object.values(db.users).filter((u) => u.venueId === owner.venueId);
+  if (members.length >= (PLANS[planOf(venue).id].hostDevices + 4)) return { error: "Ekip üyesi sınırına ulaştın." } as const;
+  const salt = randomBytes(16).toString("hex");
+  const u: User = { id: rid(), email: e, salt, hash: hashPw(randomBytes(24).toString("hex"), salt), verified: false, verifyToken: null, venueId: owner.venueId, role: "host", createdAt: Date.now() };
+  db.users[u.id] = u; save();
+  const link = requestReset(e);
+  audit(owner.email, `ekip daveti: ${e}`);
+  return { ok: true, devLink: process.env.NODE_ENV !== "production" || process.env.EXPOSE_DEV_LINKS === "1" ? link : undefined } as const;
+}
+export function removeMember(owner: User, id: string) {
+  const u = db.users[id];
+  if (!u || u.venueId !== owner.venueId || u.role === "owner") return false;
+  for (const [k, s2] of sessions) if (s2.userId === id) sessions.delete(k);
+  delete db.users[id]; audit(owner.email, `ekip üyesi çıkarıldı: ${u.email}`); save(); return true;
+}

@@ -14,6 +14,7 @@ const body = z.object({
   teamMode: z.enum(["captain", "majority", "individual"]).optional(),
   autoHost: z.boolean().optional(),
   demo: z.boolean().optional(),
+  lang: z.enum(["tr", "en"]).optional(),
 });
 
 /** Oturum varsa mekan planıyla; yoksa ücretsiz demo (kısa şablon) olarak oyun açar. */

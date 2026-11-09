@@ -31,6 +31,12 @@ export interface Ask {
   /** her zaman şıklı */
   choice?: boolean;
   explain?: string;
+  /** Yanlış şıklar bu sütunda aynı değere sahip satırlardan öncelikli seçilir (örn. aynı kıta/bölge): kafa karıştıran yakın şıklar */
+  near?: number;
+  /** Yanlış şıklar, bu sütunda doğru satırla aynı değere sahip satırlardan seçilmez (örn. aynı yıl: o yıl da gerçekleşmiş olabilir) */
+  exSame?: number;
+  /** İngilizce soru şablonu (yoksa İngilizce havuza girmez) */
+  en?: string;
 }
 export interface FactSet { id: string; cat: string; sub: string; diff: 1 | 2 | 3; rows: string[]; asks: Ask[] }
 export interface Single { q: string; a: string; alts?: string[]; wrong?: string[]; explain?: string }
@@ -48,39 +54,58 @@ export function sample<T>(arr: T[], n: number, r: () => number): T[] {
 const hid = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 10);
 const valid = (v: string | undefined) => v !== undefined && v.trim() !== "" && v.trim() !== "-";
 
+function simScore(a: string, b: string): number {
+  const na = normalizeTr(a), nb = normalizeTr(b);
+  let sc = 0;
+  if (na[0] === nb[0]) sc += 2;
+  if (na.split(" ").length === nb.split(" ").length) sc += 1.5;
+  const lr = Math.min(na.length, nb.length) / Math.max(na.length, nb.length); sc += lr * 2;
+  const ta = new Set(na.split(" ")); for (const w of nb.split(" ")) if (w.length > 2 && ta.has(w)) sc += 1.5;
+  if (na.slice(-3) === nb.slice(-3)) sc += 1;
+  if (/\d/.test(na) === /\d/.test(nb)) sc += 0.5;
+  return sc;
+}
+
 function nearNumbers(v: number, r: () => number): string[] {
   const out = new Set<number>();
   const step = v >= 10000 ? 500 : v >= 1700 && v < 2100 ? 3 : v >= 1000 ? 25 : v >= 100 ? 7 : v >= 20 ? 4 : 2;
   let guard = 0;
   while (out.size < 3 && guard++ < 80) {
-    const c = v + (Math.floor(r() * 6) + 1) * step * (r() < 0.5 ? -1 : 1);
-    if (c > 0 && c !== v) out.add(c);
+    const c = v + (Math.floor(r() * 4) + 1) * step * (r() < 0.5 ? -1 : 1);
+    if (c > 0 && c !== v && !(v >= 1700 && v <= 2026 && c > 2026)) out.add(c); // gelecek yıl şıkkı olmaz
   }
   return [...out].map(String);
 }
 
-export function expand(sets: FactSet[]): Question[] {
+export function expand(sets: FactSet[], lang: "tr" | "en" = "tr", en?: { ask: Record<string, string>; toEn: (f: string) => string | null }): Question[] {
   const out: Question[] = [];
   for (const s of sets) {
-    const parsed = s.rows.map((row) => row.split("|").map((f) => f.trim()));
+    const parsed = s.rows.map((row) => row.split("|").map((f) => f.trim())).map((p) => (lang === "en" ? p.map((f) => (f === "-" || f === "" ? "-" : en!.toEn(f) ?? "-")) : p));
     const width = Math.max(...parsed.map((p) => p.length));
     // sütun değerleri (ilk alternatif) ve benzersizlik sayımı
     const colCount: Map<string, number>[] = Array.from({ length: width }, () => new Map());
     for (const p of parsed) p.forEach((f, i) => { if (valid(f)) { const k = f.split(";")[0]; colCount[i].set(k, (colCount[i].get(k) ?? 0) + 1); } });
     s.asks.forEach((ask, ai) => {
+      const tmpl = lang === "en" ? en!.ask[`${s.id}:${ai}`] : ask.t;
+      if (!tmpl) return;
       const answers = [...new Set(parsed.filter((p) => valid(p[ask.a])).map((p) => p[ask.a].split(";")[0]))];
       parsed.forEach((p, ri) => {
         if (!valid(p[ask.a]) || !ask.by.every((b) => valid(p[b]) && colCount[b].get(p[b].split(";")[0]) === 1)) return;
         const [correct, ...alts] = p[ask.a].split(";");
-        const text = ask.t.replace(/\{(\d)\}/g, (_, d) => p[Number(d)].split(";")[0]);
+        const text = tmpl.replace(/\{(\d)\}/g, (_, d) => p[Number(d)].split(";")[0]);
         if (leaks(text, correct)) return;
         const r = rng(`${s.id}:${ai}:${ri}`);
         const numeric = ask.num && /^\d+$/.test(correct);
         const wrongPool = answers.filter((x) => x !== correct && !alts.includes(x));
-        const useChoice = ask.choice || (wrongPool.length >= 3 && r() < 0.6);
-        const base = { id: `${s.id}-${hid(text + "=" + correct)}`, category: s.cat, subtopic: s.sub, difficulty: s.diff, text, correct, accepted: alts, explanation: ask.explain, status: "approved" as const, reports: 0 };
+        // Kafa karıştıran şıklar: aynı gruptan (near) ve metin olarak benzer cevaplar öncelikli
+        const sameGroup = new Set(ask.near !== undefined ? parsed.filter((q) => q !== p && valid(q[ask.a]) && q[ask.near!] === p[ask.near!]).map((q) => q[ask.a].split(";")[0]) : []);
+        const blockedYear = new Set(ask.exSame !== undefined ? parsed.filter((q) => q[ask.exSame!] === p[ask.exSame!]).map((q) => q[ask.a].split(";")[0]) : []);
+        const candidates = wrongPool.filter((x) => !blockedYear.has(x));
+        const ranked = [...candidates].map((x) => ({ x, sc: simScore(correct, x) + (sameGroup.has(x) ? 4 : 0) + r() * 1.2 })).sort((a, b) => b.sc - a.sc).slice(0, 3).map((o) => o.x);
+        const useChoice = ask.choice || (candidates.length >= 3 && r() < 0.6);
+        const base = { id: `${s.id}-${hid(text + "=" + correct)}${lang === "en" ? ":en" : ""}`, category: s.cat, subtopic: s.sub, difficulty: s.diff, text, correct, accepted: alts, explanation: ask.explain, status: "approved" as const, reports: 0 };
         if (useChoice) {
-          const wrong = numeric ? nearNumbers(Number(correct), r) : sample(wrongPool, 3, r); // sayısal cevapta yakın (inandırıcı) şıklar
+          const wrong = numeric ? nearNumbers(Number(correct), r) : ranked; // sayısal cevapta yakın (inandırıcı) şıklar
           if (wrong.length < 3) { out.push({ ...base, kind: numeric ? "estimate" : "open" }); return; }
           out.push({ ...base, kind: "choice", options: sample([correct, ...wrong], 4, r) });
         } else out.push({ ...base, kind: "open" });

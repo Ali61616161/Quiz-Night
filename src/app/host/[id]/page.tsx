@@ -1,4 +1,5 @@
 "use client";
+import { announceGameLang } from "@/components/I18n";
 import { use, useEffect, useMemo, useState } from "react";
 import { Pul } from "@/components/Pul";
 import { QR } from "@/components/QR";
@@ -50,6 +51,7 @@ export default function HostPage({ params }: { params: Promise<{ id: string }> }
   }, [id]);
   const extra = useMemo(() => (device ? `&device=${device}` : ""), [device]);
   const { view, connected, serverNow } = useGameStream<HostView>(id, "host", device ? token : null, extra);
+  useEffect(() => { announceGameLang((view as { lang?: "tr" | "en" } | null)?.lang); }, [(view as { lang?: string } | null)?.lang]);
   const [prevPhase, setPrevPhase] = useState<Phase | null>(null);
   useEffect(() => { if (view && sound && prevPhase !== view.phase && view.phase === "answer_reveal") dingSound(); if (view) setPrevPhase(view.phase); }, [view, sound]); // eslint-disable-line react-hooks/exhaustive-deps
 

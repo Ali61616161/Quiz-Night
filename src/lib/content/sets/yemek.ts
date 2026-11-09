@@ -35,7 +35,7 @@ const GROUP = ["Mercimek çorbası|Çorba", "Ezogelin çorbası|Çorba", "Tarhan
 const ORIGIN = ["Domates|Güney Amerika", "Patates|Güney Amerika", "Mısır|Orta Amerika", "Kahve|Etiyopya", "Kakao|Orta ve Güney Amerika", "Çay|Çin", "Muz|Güneydoğu Asya", "Biber (kapya/dolma biberi)|Orta ve Güney Amerika", "Pirinç|Asya", "Buğday|Orta Doğu (Bereketli Hilal)", "Zeytin|Akdeniz havzası"];
 
 export const YEMEK: FactSet[] = [
-  { id: "grup", cat: "Yemek", sub: "Yemek grupları", diff: 1, rows: GROUP, asks: [{ t: "{0} hangi yemek grubunda yer alır?", a: 1, by: [0], choice: true }] },
+  { id: "yemekgrup", cat: "Yemek", sub: "Yemek grupları", diff: 1, rows: GROUP, asks: [{ t: "{0} hangi yemek grubunda yer alır?", a: 1, by: [0], choice: true }] },
   { id: "anavatan", cat: "Yemek", sub: "Besinlerin kökeni", diff: 3, rows: ORIGIN, asks: [{ t: "{0} hangi bölgeden dünyaya yayılmıştır?", a: 1, by: [0], choice: true }] },
   { id: "yore", cat: "Yemek", sub: "Yöresel lezzetler", diff: 2, rows: REGIONAL.filter((r) => !r.endsWith("|-")), asks: [{ t: "{0} hangi ille özdeşleşmiştir?", a: 1, by: [0], choice: true }] },
   { id: "mutfak", cat: "Yemek", sub: "Dünya mutfağı", diff: 1, rows: CUISINE.filter((r) => !r.endsWith("|-")), asks: [{ t: "{0} hangi ülke mutfağına aittir?", a: 1, by: [0], choice: true }] },

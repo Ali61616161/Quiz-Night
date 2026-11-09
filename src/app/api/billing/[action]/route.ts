@@ -26,7 +26,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ action: string 
 export async function POST(req: Request, ctx: { params: Promise<{ action: string }> }) {
   try {
     const { action } = await ctx.params;
-    const s = requireVenue(req, { write: true }); if (s instanceof Response) return s;
+    const s = requireVenue(req, { write: true, owner: true }); if (s instanceof Response) return s;
     const v = s.venue;
     if (action === "subscribe") {
       const b = subSchema.parse(await req.json());

@@ -1,4 +1,5 @@
 "use client";
+import { announceGameLang } from "@/components/I18n";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { Flip } from "@/components/Flip";
 import { Pul } from "@/components/Pul";
@@ -152,6 +153,7 @@ const ROUND_NAME: Record<string, string> = { all: "", speed: "Hız turu", wager:
 
 function Play({ saved, onLeave }: { saved: Saved; onLeave: () => void }) {
   const { view, connected, serverNow } = useGameStream<PView>(saved.gameId, "player", saved.memberToken);
+  useEffect(() => { announceGameLang((view as { lang?: "tr" | "en" } | null)?.lang); }, [(view as { lang?: string } | null)?.lang]);
   useWakeLock();
   const [draft, setDraft] = useState("");
   const [wagerDraft, setWagerDraft] = useState("");

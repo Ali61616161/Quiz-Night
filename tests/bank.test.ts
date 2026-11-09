@@ -19,7 +19,7 @@ describe("soru havuzu: miktar", () => {
   it("her konuda en az 250 soru", () => {
     const by = new Map<string, number>();
     for (const q of BANK) by.set(q.category, (by.get(q.category) ?? 0) + 1);
-    expect(CATS.length).toBeGreaterThanOrEqual(14);
+    expect(CATS.length).toBeGreaterThanOrEqual(17);
     for (const c of CATS) expect(by.get(c) ?? 0, c).toBeGreaterThanOrEqual(250);
   });
   it("her sorunun kategorisi tanımlı bir konudur", () => { for (const q of BANK) expect(CATS, q.id).toContain(q.category); });
@@ -165,5 +165,40 @@ describe("gece kurma: karışık, konu ve tekrar yok", () => {
     expect(n.low).toBe(true);
     const fromSanat = n.questions.filter((q) => q.category === "Sanat").length;
     expect(fromSanat).toBe(0); // Sanat tükendi: görülmüş sanat sorusu yerine başka konudan yeni soru gelir
+  });
+});
+
+import { BANK_EN } from "@/lib/content/bank";
+import { hasTurkish } from "@/lib/content/en";
+describe("İngilizce soru havuzu", () => {
+  it("en az 2000 soru, Türkçe karakter/sözcük içermez, kimlik ve metin benzersiz", () => {
+    expect(BANK_EN.length).toBeGreaterThanOrEqual(2000);
+    expect(new Set(BANK_EN.map((q) => q.id)).size).toBe(BANK_EN.length);
+    expect(new Set(BANK_EN.map((q) => q.text.toLowerCase())).size).toBe(BANK_EN.length);
+    for (const q of BANK_EN) { expect(hasTurkish(q.text) || hasTurkish(q.correct) || (q.options ?? []).some(hasTurkish), q.text).toBe(false); }
+  });
+  it("çoktan seçmeli şıklar geçerli, doğru cevap tek", () => {
+    for (const q of BANK_EN.filter((x) => x.kind === "choice")) { expect(q.options).toHaveLength(4); expect(new Set(q.options).size).toBe(4); expect(q.options).toContain(q.correct); expect(validateAnswer(q, q.correct)).toBe(true); }
+  });
+  it("İngilizce gece İngilizce soru getirir", () => {
+    const n = buildNight({ template: "classic", seen: new Set(), allowed: ALL as never, seed: "en1", lang: "en" });
+    expect(n.questions.length).toBeGreaterThanOrEqual(30);
+    for (const q of n.questions) expect(hasTurkish(q.text), q.text).toBe(false);
+  });
+});
+
+describe("şık kalitesi", () => {
+  it("yıl şıklarında gelecek yıl ve geçersiz sayı yok", () => {
+    for (const q of BANK.filter((x) => x.kind === "choice" && /yıl/.test(x.text) && x.options!.every((o) => /^\d{4}$/.test(o)))) {
+      for (const o of q.options!) { expect(Number(o), `${q.text} ${q.options}`).toBeLessThanOrEqual(2026); expect(Number(o)).toBeGreaterThan(0); }
+    }
+  });
+});
+
+import { ALL_SETS } from "@/lib/content/bank";
+describe("küme kimlikleri", () => {
+  it("olgu kümesi kimlikleri benzersiz (İngilizce şablonlar kimliğe bağlı)", () => {
+    const ids = ALL_SETS.map((x) => x.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

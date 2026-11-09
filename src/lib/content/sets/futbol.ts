@@ -65,8 +65,8 @@ export const FUTBOL: FactSet[] = [
   { id: "sl", cat: "Futbol", sub: "Süper Lig", diff: 2, rows: SUPERLIG, asks: [{ t: "Türkiye Süper Ligi'nde {0} sezonunun şampiyonu hangi takımdır?", a: 1, by: [0], choice: true }] },
   { id: "kulup", cat: "Futbol", sub: "Kulüpler", diff: 2, rows: CLUBS, asks: [
     { t: "{0} hangi ülkenin futbol kulübüdür?", a: 1, by: [0], choice: true },
-    { t: "{0} takımının iç saha stadyumu hangisidir?", a: 2, by: [0], choice: true },
-    { t: "{2} stadyumu hangi kulübün evidir?", a: 0, by: [2], choice: true },
+    { t: "{0} takımının iç saha stadyumu hangisidir?", a: 2, by: [0], choice: true, near: 1 },
+    { t: "{2} hangi kulübün evidir?", a: 0, by: [2], choice: true, near: 1 },
   ] },
   { id: "oyuncu", cat: "Futbol", sub: "Futbolcular", diff: 2, rows: PLAYERS, asks: [
     { t: "{0} hangi ülkenin milli futbolcusudur (olmuştur)?", a: 1, by: [0], choice: true },

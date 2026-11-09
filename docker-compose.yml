@@ -1,0 +1,11 @@
+# Tek komutla çalıştırma: docker compose up -d --build
+# TLS için önüne Caddy/nginx koyun (bkz. DEPLOY.md); X-Forwarded-For başlığını proxy yazmalı.
+services:
+  quizhane:
+    build: .
+    restart: unless-stopped
+    ports: ["3000:3000"]
+    env_file: .env
+    volumes: ["quizhane-data:/data"]
+volumes:
+  quizhane-data:

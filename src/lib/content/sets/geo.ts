@@ -68,13 +68,13 @@ const NATURE = [
 
 export const GEO: FactSet[] = [
   { id: "cap", cat: "Coğrafya", sub: "Başkentler", diff: 1, rows: COUNTRIES, asks: [
-    { t: "{0} ülkesinin başkenti neresidir?", a: 1, by: [0] },
-    { t: "{1} hangi ülkenin başkentidir?", a: 0, by: [1] },
+    { t: "{0} ülkesinin başkenti neresidir?", a: 1, by: [0], near: 2 },
+    { t: "{1} hangi ülkenin başkentidir?", a: 0, by: [1], near: 2 },
     { t: "{0} hangi kıtada yer alır?", a: 2, by: [0], choice: true },
   ] },
   { id: "il", cat: "Coğrafya", sub: "Türkiye illeri", diff: 2, rows: PROVINCES, asks: [
     { t: "{0} ilinin plaka kodu kaçtır?", a: 1, by: [0], num: true },
-    { t: "{1} plaka kodu hangi ile aittir?", a: 0, by: [1] },
+    { t: "{1} plaka kodu hangi ile aittir?", a: 0, by: [1], near: 2 },
     { t: "{0} ili hangi coğrafi bölgemizde yer alır?", a: 2, by: [0], choice: true },
   ] },
   { id: "abd", cat: "Coğrafya", sub: "ABD eyaletleri", diff: 3, rows: STATES, asks: [

@@ -44,7 +44,7 @@ export const EDEBIYAT: FactSet[] = [
     { t: "{0} Nobel Edebiyat Ödülü'nü kim kazanmıştır?", a: 1, by: [0], choice: true },
     { t: "{1} hangi yıl Nobel Edebiyat Ödülü'nü almıştır?", a: 0, by: [1], num: true },
   ] },
-  { id: "karakter", cat: "Edebiyat", sub: "Edebî karakterler", diff: 2, rows: CHARACTERS, asks: [{ t: "{0} adlı karakter hangi eserde yer alır?", a: 1, by: [0], choice: true }] },
+  { id: "edkarakter", cat: "Edebiyat", sub: "Edebî karakterler", diff: 2, rows: CHARACTERS, asks: [{ t: "{0} adlı karakter hangi eserde yer alır?", a: 1, by: [0], choice: true }] },
 ];
 
 export const EDEBIYAT_SINGLES: SingleSet[] = [{

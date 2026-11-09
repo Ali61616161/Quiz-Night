@@ -163,6 +163,22 @@ await check("başka mekanın verisine erişilemez (oturum başka mekana bağlı)
   const q = await (await fetch(BASE + "/api/venue/questions", { headers: { Cookie: c2 } })).json();
   assert.equal(q.custom.length, 0);
 });
+let hostCookie = "";
+await check("ekip: sahip host davet eder, host şifresini belirler; host abonelik/marka/davet yapamaz", async () => {
+  const hostMail = `h${Date.now()}@test.co`;
+  const inv = await (await post("/api/venue/invite", { email: hostMail }, C)).json();
+  assert.ok(inv.devLink, "davet bağlantısı");
+  const token = inv.devLink.split("sifirla=")[1];
+  assert.equal((await post("/api/auth/reset", { token, password: "host-uzun-sifre-9" })).status, 200);
+  const lr = await post("/api/auth/login", { email: hostMail, password: "host-uzun-sifre-9" });
+  assert.equal(lr.status, 200);
+  hostCookie = lr.headers.get("set-cookie").split(";")[0];
+  const H = { Cookie: hostCookie };
+  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_ok" }, H)).status, 403);
+  assert.equal((await post("/api/venue/brand", { color1: "#112233", color2: "#F4B942", font: "serif", bg: "cuha" }, H)).status, 403);
+  assert.equal((await post("/api/venue/invite", { email: "x@y.co" }, H)).status, 403);
+  assert.notEqual((await post("/api/games", { template: "quick" }, H)).status, 403); // host oyun açabilir (günlük sınır 402 olabilir)
+});
 await check("admin: normal kullanıcı 403", async () => { assert.equal((await fetch(BASE + "/api/admin/overview", { headers: C })).status, 403); });
 await check("oturum kapatılınca çerez geçersiz", async () => {
   await post("/api/auth/logout", {}, C);

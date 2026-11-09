@@ -29,3 +29,16 @@ Not: ölçüm istemci ve sunucu aynı makinede, gerçek mobil ağ gecikmesi dahi
 ## Soru havuzu denetimi (tests/bank.test.ts)
 Miktar (≥5000, 14 konu × ≥250) · kimlik/metin benzersizliği · aynı soru farklı cevapla bulunmaz · her cevap doğru sayılır · çoktan seçmelide 4 farklı şık ve tek doğru · cevap sızıntısı yok · sıralama/eşleştirme iç tutarlılık · tablo çelişki taraması (plaka 1–81 eksiksiz, 92 element atom numaraları ardışık, padişah/cumhurbaşkanı sırası, turnuva serilerinin kesintisizliği, seçilmiş sabit olgular) · karışık gecede ≥8 konu · her tematik gecede yalnızca o konu · tematik→karışık→tematik gecelerde tekrar yok · 20 gece üst üste tekrar yok · konu tükenince başka konudan yeni soru + düşük havuz uyarısı.
 Son tam koşu: 67 birim testi geçti; e2e, 25 güvenlik kontrolü ve yük testi (40 takım/200 oyuncu, hata 0) yeni havuzla geçti.
+
+## Son tam koşu (bu sürüm)
+| Set | Sonuç |
+|---|---|
+| `npm test` | 77 test geçti (soru havuzu, İngilizce havuz, çeviri kapsamı, sunucu, motor) |
+| `tsc` / lint / `npm audit` | temiz / 0 hata / 0 açık |
+| `e2e/full-game.mjs` | geçti |
+| `e2e/i18n.mjs` (EN) | tüm ekranlar ve oyun akışı, 0 Türkçe kalıntı |
+| `e2e/a11y.mjs` (axe) | ciddi/kritik ihlal yok (bir kontrast ihlali bulundu ve düzeltildi) |
+| `e2e/security.mjs` | 26/26 (ekip rolü: host abonelik/marka/davet yapamaz) |
+| Yük (40 takım/200 oyuncu) | hata 0, cevap p50 ~190 ms, yayın p50 ~150 ms |
+
+Bu turda testlerin bulduğu gerçek hatalar: iki olgu kümesinin aynı kimliği paylaşması (İngilizce şablonlar ve "programlama dilleri" eşleştirmesi yanlış kümeye gidiyordu), gelecek yıl şıkkı üretimi (2034), "Stadyumu stadyumu" metni, dil düğmesinin e2e'de yanlış tıklanması, ekran okuyucu kontrastı.

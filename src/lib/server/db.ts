@@ -28,19 +28,19 @@ export interface QReport { id: string; at: number; questionId: string; venueId: 
 export interface DB {
   users: Record<string, User>; venues: Record<string, Venue>; coupons: Record<string, Coupon>;
   abuse: AbuseFlag[]; reports: QReport[]; audit: { at: number; who: string; what: string }[];
-  qstats: Record<string, { n: number; ok: number }>; drafts: Question[]; announcement: string;
+  qstats: Record<string, { n: number; ok: number }>; drafts: Question[]; globalQuestions: Question[]; diffOverrides: Record<string, 1 | 2 | 3>; announcement: string;
   mailLog: { at: number; to: string; subject: string; body: string }[];
 }
 
 const DIR = process.env.DATA_DIR || path.join(process.cwd(), ".data");
 const FILE = path.join(DIR, "db.json");
-const empty = (): DB => ({ users: {}, venues: {}, coupons: {}, abuse: [], reports: [], audit: [], qstats: {}, drafts: [], announcement: "", mailLog: [] });
+const empty = (): DB => ({ users: {}, venues: {}, coupons: {}, abuse: [], reports: [], audit: [], qstats: {}, drafts: [], globalQuestions: [], diffOverrides: {}, announcement: "", mailLog: [] });
 
 const g = globalThis as unknown as { __db?: DB; __dbTimer?: ReturnType<typeof setTimeout> };
 
 function load(): DB {
   if (process.env.NODE_ENV === "test" || process.env.DB_MEMORY === "1") return empty();
-  try { if (existsSync(FILE)) return { ...empty(), ...JSON.parse(readFileSync(FILE, "utf8")) }; } catch { /* bozuk dosya: boş başla */ }
+  try { if (existsSync(FILE)) return { ...empty(), ...JSON.parse(readFileSync(FILE, "utf8")) } as DB; } catch { /* bozuk dosya: boş başla */ }
   return empty();
 }
 export const db: DB = (g.__db ??= load());

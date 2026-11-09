@@ -25,3 +25,10 @@
 - 14 konu: Coğrafya, Tarih, Bilim, Futbol, Spor, Dizi/Film, Müzik, Edebiyat, Sanat, Yemek, Oyun, Üniversite/Kampüs, Yerel, Genel Kültür. Her biri ≥250 (test).
 - **Karışık gece:** her soruda konular arasında eşit şans (en az kullanılan konu önce), konu içinde alt konu dengesi. **Tematik gece:** yalnızca seçilen konu; o konuda o biçimde soru bitince aynı konudan şıklı/açık soru.
 - **Tekrar yok:** mekanın görülmüş soru kaydı (reveal'da) tüm gece türlerinde ortaktır; önce görülmemiş soru, başka konudan bile olsa; ancak havuz tamamen tükenince tekrar. Havuz azalınca host'a uyarı.
+
+## Soru havuzu v3, dil, ekip
+- 17 konu (Gündem 2000-2025, Teknoloji, Doğa ve Hayvanlar eklendi). Çoktan seçmelide yanlış şıklar benzerlik puanıyla seçilir (aynı harf/uzunluk/kelime, aynı grup: kıta, bölge, ülke); sayısal cevapta yakın sayılar, gelecek yıl yok. Gündem'de "o yıl yaşanan olay" sorusunda şıklar aynı yıldan seçilmez.
+- İngilizce havuz: aynı olgu tablolarından `en.ts` sözlüğü ve İngilizce şablonlarla üretilir; güvenilir çevirisi olmayan satır atlanır (Türkçe karakter/sözcük kalırsa soru havuza girmez).
+- Arayüz dili: `I18nBoot` + çalışma zamanı DOM çevirisi (`i18n/dict.ts`, ~700 satır + dinamik kalıplar). Varsayılan Türkçe; seçim `localStorage`'da; oyun İngilizce açıldıysa ve kullanıcı seçim yapmadıysa TV/telefonlar otomatik geçer. TV'de düğme yok.
+- Ekip: sahip host davet edebilir (şifre belirleme bağlantısı e-postayla); host oyun açar, abonelik/marka/davet/lig kapatma yalnızca sahibe.
+- Dağıtım: Dockerfile (standalone çıktı), docker-compose, SUNUM.md.

@@ -1,5 +1,5 @@
 import { PLANS, can, type PlanId } from "@config/plans";
-import { BANK, buildNight, type TemplateId } from "@/lib/content/bank";
+import { BANK, applyDifficultyOverrides, buildNight, type TemplateId } from "@/lib/content/bank";
 import { allowedModesFor, newGame } from "@/lib/engine/game";
 import { ranking } from "@/lib/engine/game";
 import { normalizeTr } from "@/lib/engine/normalize";
@@ -7,6 +7,7 @@ import type { Game, Question, QuestionKind, RoundType, TeamMode } from "@/lib/en
 import { db, save, type GameRecord, type Venue } from "./db";
 
 const DAY = 24 * 3600_000;
+applyDifficultyOverrides(db.diffOverrides ?? {});
 
 export function effectivePlan(v: Venue | null): PlanId {
   if (!v) return "free";
@@ -31,18 +32,18 @@ export class VenueError extends Error { constructor(public code: string, m: stri
 
 export function gamesToday(v: Venue, now = Date.now()) { return v.gameTimes.filter((t) => now - t < DAY).length; }
 
-export function createVenueGame(v: Venue | null, opts: { template: TemplateId; theme?: string; durationSec?: number; teamMode?: TeamMode; autoHost?: boolean }) {
+export function createVenueGame(v: Venue | null, opts: { template: TemplateId; theme?: string; durationSec?: number; teamMode?: TeamMode; autoHost?: boolean; lang?: "tr" | "en" }) {
   const plan = effectivePlan(v);
   const P = PLANS[plan];
   const now = Date.now();
   if (v && P.dailyGames !== null && gamesToday(v, now) >= P.dailyGames) throw new VenueError("daily_limit", `Ücretsiz planda günde en fazla ${P.dailyGames} oyun açılır. Planı yükselt.`, 402);
   const allowed = allowedFor(plan);
-  const extra = v && can(plan, "own_packs_play") ? v.customQuestions : [];
-  const { questions, low } = buildNight({ template: opts.template, theme: opts.theme, seen: new Set(v?.seen ?? []), allowed, extra });
+  const extra = [...db.globalQuestions, ...(v && can(plan, "own_packs_play") ? v.customQuestions : [])];
+  const { questions, low } = buildNight({ template: opts.template, theme: opts.theme, seen: new Set(v?.seen ?? []), allowed, extra, lang: opts.lang });
   if (!questions.length) throw new VenueError("empty", "Soru havuzu boş, farklı şablon seç.");
   const brand = v && can(plan, "branding") ? { ...v.brand, logo: v.logo ? `/api/venues/${v.id}/logo` : null } : null;
   const game = newGame({
-    venueName: v?.name ?? "Demo Kafe", venueId: v?.id ?? null, plan, brand, questions,
+    venueName: v?.name ?? "Demo Kafe", venueId: v?.id ?? null, plan, brand, questions, lang: opts.lang ?? "tr",
     settings: { durationMs: (opts.durationSec ?? 30) * 1000, teamMode: allowedModesFor(plan).includes(opts.teamMode ?? "captain") ? opts.teamMode ?? "captain" : "captain" },
   });
   game.autoHost = Boolean(opts.autoHost && can(plan, "auto_host"));

@@ -15,7 +15,8 @@
     "start:e2e": "next start -p 3100",
     "e2e:security": "node e2e/security.mjs",
     "loadtest": "node scripts/loadtest.mjs",
-    "bank:verify": "EXPORT_BANK=/tmp/bank.json vitest run tests/export.test.ts && node scripts/verify-bank.mjs /tmp/bank.json"
+    "bank:verify": "EXPORT_BANK=/tmp/bank.json vitest run tests/export.test.ts && node scripts/verify-bank.mjs /tmp/bank.json",
+    "e2e:i18n": "node e2e/i18n.mjs"
   },
   "dependencies": {
     "@fontsource-variable/big-shoulders-display": "^5.3.0",
@@ -32,6 +33,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "axe-core": "^4.14.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.5",
     "playwright": "^1.63.0",
