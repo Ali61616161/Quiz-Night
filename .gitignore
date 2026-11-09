@@ -7,3 +7,4 @@ next-env.d.ts
 test-results
 e2e/shots
 .data
+bank-verification.json

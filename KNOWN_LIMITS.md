@@ -24,5 +24,7 @@
 - Skor tablosu flip animasyonu ve pul düşmesi vardır; sıralama sorusu için "sürükle" yerine dokun-sırala kullanıldı.
 - i18n: `en.json` iskelet; çoğu metin bileşenlerde sabit Türkçe.
 - Seçim ekranı/erişilebilirlik: manuel kontrol yapıldı; otomatik axe taraması yapılmadı.
-- Havuz 600+ soru; üretim hedefi 2.000+ için AI hattı ve CSV kullanılmalı.
+- **Soru havuzu (6.500+ soru, 14 konu) yapısal olarak denetlenir ama olgusal doğruluğu bağımsız bir kaynakla doğrulanmadı.** Sorular tek bir yazardan (yapay zekâ bilgisi) olgu tablolarına yazıldı; testler tutarlılığı, benzersizliği, sızıntıyı ve bilinen sabit olguları denetler, ancak her olgunun gerçek dünyadaki doğruluğunu kanıtlamaz. Yayın öncesi `npm run bank:verify` (Claude ile bağımsız çapraz kontrol) çalıştırılmalı ve `wrong`/`uncertain` çıkanlar kaynakla elle doğrulanmalı; kritik konularda (tarih, spor sonuçları, yıllar) bir insan örneklem incelemesi şarttır.
+- Çoktan seçmelide yanlış şıklar aynı sütundaki başka satırlardan gelir; bazı sorularda şıklar fazla kolay (alakasız) olabilir. Sayısal cevaplarda yakın sayılar kullanılır.
+- "Güncel" kategorisi yoktur (bilgi hızla eskir). Seçim sonuçları, 2024 sonrası spor/ödül sonuçları havuzda yoktur.
 - Gerçek cihaz (eski akıllı TV tarayıcısı, iOS Safari) testi yapılmadı; yalnızca Chromium.

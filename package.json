@@ -14,7 +14,8 @@
     "e2e": "node e2e/full-game.mjs",
     "start:e2e": "next start -p 3100",
     "e2e:security": "node e2e/security.mjs",
-    "loadtest": "node scripts/loadtest.mjs"
+    "loadtest": "node scripts/loadtest.mjs",
+    "bank:verify": "EXPORT_BANK=/tmp/bank.json vitest run tests/export.test.ts && node scripts/verify-bank.mjs /tmp/bank.json"
   },
   "dependencies": {
     "@fontsource-variable/big-shoulders-display": "^5.3.0",

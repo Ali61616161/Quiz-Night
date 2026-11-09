@@ -69,11 +69,11 @@ function GameTab({ info, has, flash }: P) {
     <section style={{ display: "grid", gap: ".8rem" }}>
       <h2 style={{ fontSize: "1.6rem" }}>Gece şablonu</h2>
       <div style={{ display: "grid", gap: ".5rem" }}>
-        {[["classic", "Klasik gece", "5 tur karışık konu + tahmin + final bahis sorusu"], ["themed", "Tematik gece", "Tek konu: futbol, dizi/film, müzik, oyun, kampüs, yerel"], ["quick", "Hızlı gece (45 dk)", "3 tur, hız turu dahil"], ["bilbakalim", "Bil Bakalım turu", "Kısa ve hızlı tek tur"]].map(([id, n, d]) => (
+        {[["classic", "Klasik gece", "5 tur karışık konu + tahmin + final bahis sorusu"], ["themed", "Tematik gece", "Tek konu seç: 14 konudan biri"], ["quick", "Hızlı gece (45 dk)", "3 tur, hız turu dahil"], ["bilbakalim", "Bil Bakalım turu", "Kısa ve hızlı tek tur"]].map(([id, n, d]) => (
           <button key={id} className={`btn ${template === id ? "" : "btn-ghost"}`} style={{ justifyContent: "flex-start", textAlign: "left", flexDirection: "column", alignItems: "flex-start", padding: ".6rem 1rem" }} aria-pressed={template === id} onClick={() => setTemplate(id)}><strong>{n}</strong><span style={{ fontWeight: 400 }}>{d}</span></button>
         ))}
       </div>
-      {template === "themed" && <label>Tema<select className="input" value={theme} onChange={(e) => setTheme(e.target.value)}>{[["futbol", "Futbol"], ["dizifilm", "Dizi/Film nostaljisi"], ["2000ler", "2000'ler"], ["muzik", "Müzik"], ["oyun", "Oyun"], ["kampus", "Üniversite hayatı"], ["yerel", "Yerel"], ["yemek", "Yemek"]].map(([v, n]) => <option key={v} value={v}>{n}</option>)}</select></label>}
+      {template === "themed" && <label>Tema<select className="input" value={theme} onChange={(e) => setTheme(e.target.value)}>{[["cografya", "Coğrafya"], ["tarih", "Tarih"], ["bilim", "Bilim"], ["futbol", "Futbol"], ["spor", "Spor"], ["dizifilm", "Dizi/Film"], ["muzik", "Müzik"], ["edebiyat", "Edebiyat"], ["sanat", "Sanat"], ["yemek", "Yemek"], ["oyun", "Oyun"], ["kampus", "Üniversite hayatı"], ["yerel", "Yerel (şehir ve İstanbul)"], ["genel", "Genel kültür"], ["2000ler", "Eğlence karması"]].map(([v, n]) => <option key={v} value={v}>{n}</option>)}</select></label>}
       <div style={{ display: "flex", gap: ".5rem", flexWrap: "wrap", alignItems: "center" }}>
         <span>Takım modu:</span>
         {[["captain", "Kaptan", true], ["individual", "Bireysel", has("mode_individual")], ["majority", "Çoğunluk", has("mode_majority")]].map(([v, n, ok]) => <button key={String(v)} className={`btn ${mode === v ? "" : "btn-ghost"}`} disabled={!ok} onClick={() => setMode(String(v))}>{String(n)}{ok ? "" : " (kilitli)"}</button>)}

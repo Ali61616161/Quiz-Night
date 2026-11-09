@@ -18,3 +18,10 @@
 - **AI:** Anthropic Messages API (sunucu), Zod şeması, mükerrer kontrolü, taslak→mekan onayı. Anahtar yoksa temiz hata.
 - **Retention:** 30 gün sonra (ayarlanabilir) oyun geçmişindeki takım adları anonimleşir.
 - **i18n:** `messages/tr.json` + `en.json` ve `t()` altyapısı var; metinlerin çoğu henüz bileşenlerde sabit.
+
+## Soru havuzu v2
+- `src/lib/content/gen.ts` + `sets/*.ts`: olgu tablosu → soru üretici. Soruda kullanılan alan sütununda benzersiz değilse soru üretilmez (tek net cevap). Yanlış şıklar aynı cevap sütunundan; sayısal cevapta yakın sayılar.
+- Soru metni cevabı içeriyorsa üretilmez (`leaks`). Soru kimliği içerik özetidir (veri düzenlense de görülmüş-soru kaydı bozulmaz).
+- 14 konu: Coğrafya, Tarih, Bilim, Futbol, Spor, Dizi/Film, Müzik, Edebiyat, Sanat, Yemek, Oyun, Üniversite/Kampüs, Yerel, Genel Kültür. Her biri ≥250 (test).
+- **Karışık gece:** her soruda konular arasında eşit şans (en az kullanılan konu önce), konu içinde alt konu dengesi. **Tematik gece:** yalnızca seçilen konu; o konuda o biçimde soru bitince aynı konudan şıklı/açık soru.
+- **Tekrar yok:** mekanın görülmüş soru kaydı (reveal'da) tüm gece türlerinde ortaktır; önce görülmemiş soru, başka konudan bile olsa; ancak havuz tamamen tükenince tekrar. Havuz azalınca host'a uyarı.

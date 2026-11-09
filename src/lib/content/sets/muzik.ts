@@ -1,0 +1,112 @@
+import type { FactSet, SingleSet } from "../gen";
+
+const EUROVISION = ["1956|İsviçre", "1957|Hollanda", "1958|Fransa", "1959|Hollanda", "1960|Fransa", "1961|Lüksemburg", "1962|Fransa", "1963|Danimarka", "1964|İtalya", "1965|Lüksemburg", "1966|Avusturya", "1967|Birleşik Krallık", "1968|İspanya",
+  "1970|İrlanda", "1971|Monako", "1972|Lüksemburg", "1973|Lüksemburg", "1974|İsveç", "1975|Hollanda", "1976|Birleşik Krallık", "1977|Fransa", "1978|İsrail", "1979|İsrail", "1980|İrlanda", "1981|Birleşik Krallık", "1982|Almanya", "1983|Lüksemburg",
+  "1984|İsveç", "1985|Norveç", "1986|Belçika", "1987|İrlanda", "1988|İsviçre", "1989|Yugoslavya", "1990|İtalya", "1991|İsveç", "1992|İrlanda", "1993|İrlanda", "1994|İrlanda", "1995|Norveç", "1996|İrlanda", "1997|Birleşik Krallık", "1998|İsrail",
+  "1999|İsveç", "2000|Danimarka", "2001|Estonya", "2002|Letonya", "2003|Türkiye", "2004|Ukrayna", "2005|Yunanistan", "2006|Finlandiya", "2007|Sırbistan", "2008|Rusya", "2009|Norveç", "2010|Almanya", "2011|Azerbaycan", "2012|İsveç", "2013|Danimarka",
+  "2014|Avusturya", "2015|İsveç", "2016|Ukrayna", "2017|Portekiz", "2018|İsrail", "2019|Hollanda", "2021|İtalya", "2022|Ukrayna", "2023|İsveç", "2024|İsviçre"];
+// şarkı|sanatçı
+const SONGS = [
+  "Bohemian Rhapsody|Queen", "We Will Rock You|Queen", "Another One Bites the Dust|Queen", "Don't Stop Me Now|Queen", "Thriller|Michael Jackson", "Billie Jean|Michael Jackson", "Beat It|Michael Jackson", "Smooth Criminal|Michael Jackson",
+  "Imagine|John Lennon", "Hey Jude|The Beatles;Beatles", "Yesterday|The Beatles;Beatles", "Let It Be|The Beatles;Beatles", "Come Together|The Beatles;Beatles", "Hotel California|Eagles", "Smells Like Teen Spirit|Nirvana", "Come as You Are|Nirvana",
+  "Shape of You|Ed Sheeran", "Perfect|Ed Sheeran", "Rolling in the Deep|Adele", "Hello|Adele", "Someone Like You|Adele", "Like a Prayer|Madonna", "Vogue|Madonna", "Material Girl|Madonna", "Born This Way|Lady Gaga", "Poker Face|Lady Gaga",
+  "Bad Romance|Lady Gaga", "Stairway to Heaven|Led Zeppelin", "Whole Lotta Love|Led Zeppelin", "Gangnam Style|Psy", "Despacito|Luis Fonsi", "Another Brick in the Wall|Pink Floyd", "Wish You Were Here|Pink Floyd", "Comfortably Numb|Pink Floyd",
+  "Wonderwall|Oasis", "Don't Look Back in Anger|Oasis", "Creep|Radiohead", "Yellow|Coldplay", "Viva la Vida|Coldplay", "Fix You|Coldplay", "Paradise|Coldplay", "Livin' on a Prayer|Bon Jovi", "Sweet Child o' Mine|Guns N' Roses",
+  "November Rain|Guns N' Roses", "Enter Sandman|Metallica", "Nothing Else Matters|Metallica", "Back in Black|AC/DC", "Highway to Hell|AC/DC", "Thunderstruck|AC/DC", "Africa|Toto", "Take On Me|a-ha", "Never Gonna Give You Up|Rick Astley",
+  "Girls Just Want to Have Fun|Cyndi Lauper", "Total Eclipse of the Heart|Bonnie Tyler", "Every Breath You Take|The Police;Police", "Sweet Dreams (Are Made of This)|Eurythmics", "Purple Rain|Prince", "Let's Dance|David Bowie", "Space Oddity|David Bowie",
+  "Heroes|David Bowie", "Start Me Up|The Rolling Stones;Rolling Stones", "Paint It Black|The Rolling Stones;Rolling Stones", "Waterloo|ABBA", "Dancing Queen|ABBA", "Mamma Mia|ABBA", "Super Trouper|ABBA", "Stayin' Alive|Bee Gees", "Lose Yourself|Eminem",
+  "Stan|Eminem", "In da Club|50 Cent", "Crazy in Love|Beyoncé;Beyonce", "Halo|Beyoncé;Beyonce", "Single Ladies|Beyoncé;Beyonce", "Umbrella|Rihanna", "Diamonds|Rihanna", "...Baby One More Time|Britney Spears", "Toxic|Britney Spears",
+  "Shake It Off|Taylor Swift", "Blank Space|Taylor Swift", "Love Story|Taylor Swift", "Anti-Hero|Taylor Swift", "Blinding Lights|The Weeknd;Weeknd", "Starboy|The Weeknd;Weeknd", "Uptown Funk|Mark Ronson", "Just the Way You Are|Bruno Mars",
+  "Grenade|Bruno Mars", "Locked Out of Heaven|Bruno Mars", "Happy|Pharrell Williams", "Get Lucky|Daft Punk", "Around the World|Daft Punk", "Titanium|David Guetta", "Levitating|Dua Lipa", "Don't Start Now|Dua Lipa", "Bad Guy|Billie Eilish",
+  "Happier Than Ever|Billie Eilish", "Drivers License|Olivia Rodrigo", "Believer|Imagine Dragons", "Radioactive|Imagine Dragons", "Counting Stars|OneRepublic", "Somebody That I Used to Know|Gotye", "Royals|Lorde", "Hallelujah|Leonard Cohen",
+  "Hurt|Johnny Cash", "Ring of Fire|Johnny Cash", "Jolene|Dolly Parton", "Hit the Road Jack|Ray Charles", "What a Wonderful World|Louis Armstrong", "My Way|Frank Sinatra", "New York, New York|Frank Sinatra", "Fly Me to the Moon|Frank Sinatra",
+  "Can't Help Falling in Love|Elvis Presley", "Jailhouse Rock|Elvis Presley", "Hound Dog|Elvis Presley", "Johnny B. Goode|Chuck Berry", "Respect|Aretha Franklin", "I Will Always Love You|Whitney Houston", "I Wanna Dance with Somebody|Whitney Houston",
+  "My Heart Will Go On|Céline Dion;Celine Dion", "Believe|Cher", "Waka Waka|Shakira", "Hips Don't Lie|Shakira", "Livin' la Vida Loca|Ricky Martin", "Macarena|Los del Río", "La Bamba|Ritchie Valens", "Mambo No. 5|Lou Bega",
+  "Şımarık|Tarkan", "Kuzu Kuzu|Tarkan", "Dudu|Tarkan", "Hepsi Senin Mi?|Tarkan", "Gül Pembe|Barış Manço;Manço", "Dönence|Barış Manço;Manço", "Nazar Eylemez|Barış Manço;Manço", "Huzurum Kalmadı|Ferdi Tayfur", "Gidiyorum|Sezen Aksu",
+  "Firuze|Sezen Aksu", "Hadi Bakalım|Sezen Aksu", "Sarı Odalar|Sezen Aksu", "Deli|Mor ve Ötesi", "Everyway That I Can|Sertab Erener", "Tutamıyorum Zamanı|Kenan Doğulu", "Resimdeki Gözyaşları|Cem Karaca", "Tamirci Çırağı|Cem Karaca",
+  "Namus Belası|Cem Karaca", "Ele Güne Karşı|MFÖ", "Peki Peki Anladık|MFÖ", "Her Şeyi Yak|Duman", "Paramparça|Teoman", "Gönül Dağı|Neşet Ertaş", "Nilüfer|Müslüm Gürses", "Mavi Mavi|İbrahim Tatlıses", "Öyle Bir Geçer Zaman ki|Erkin Koray",
+];
+// besteci|ülke|ünlü eser
+const COMPOSERS = ["Ludwig van Beethoven;Beethoven|Almanya|Ay Işığı Sonatı", "Wolfgang Amadeus Mozart;Mozart|Avusturya|Küçük Gece Müziği", "Johann Sebastian Bach;Bach|Almanya|Brandenburg Konçertoları", "Antonio Vivaldi;Vivaldi|İtalya|Dört Mevsim",
+  "Pyotr İlyiç Çaykovski;Çaykovski;Tchaikovsky|Rusya|Kuğu Gölü", "Frédéric Chopin;Chopin|Polonya|Gece Müzikleri (Nocturne)", "Giuseppe Verdi;Verdi|İtalya|La Traviata", "Giacomo Puccini;Puccini|İtalya|Madama Butterfly", "Richard Wagner;Wagner|Almanya|Nibelungen Yüzüğü",
+  "Georg Friedrich Händel;Handel;Händel|Almanya|Mesih (Messiah)", "Joseph Haydn;Haydn|Avusturya|Yaratılış (Die Schöpfung)", "Franz Schubert;Schubert|Avusturya|Eksik Senfoni (Yarım Kalmış Senfoni)", "Johann Strauss II;Strauss|Avusturya|Mavi Tuna Valsi",
+  "Claude Debussy;Debussy|Fransa|Ay Işığı (Clair de Lune)", "Maurice Ravel;Ravel|Fransa|Bolero", "Nikolay Rimsky-Korsakov;Rimski-Korsakov|Rusya|Şehrazat", "Antonín Dvořák;Dvorak|Çekya|Yeni Dünya Senfonisi", "Edvard Grieg;Grieg|Norveç|Peer Gynt",
+  "Bedřich Smetana;Smetana|Çekya|Vltava (Moldau)", "Georges Bizet;Bizet|Fransa|Carmen", "Gioachino Rossini;Rossini|İtalya|Seviller Berberi", "Johannes Brahms;Brahms|Almanya|Macar Dansları", "Igor Stravinsky;Stravinski;Stravinsky|Rusya|Bahar Ayini",
+  "Sergey Prokofiev;Prokofyev;Prokofiev|Rusya|Pyotr ile Kurt", "Jean Sibelius;Sibelius|Finlandiya|Finlandiya (Finlandia)", "George Gershwin;Gershwin|ABD|Rhapsody in Blue", "Ahmed Adnan Saygun;Saygun|Türkiye|Yunus Emre Oratoryosu", "Fazıl Say|Türkiye|İstanbul Senfonisi",
+  "Dede Efendi|Osmanlı|Hicaz Mâni"];
+// enstrüman|çalgı ailesi
+const INSTR = ["Bağlama|Telli", "Ud|Telli", "Kanun|Telli", "Gitar|Telli", "Arp|Telli", "Keman|Yaylı", "Viyolonsel|Yaylı", "Kemençe|Yaylı", "Kontrbas|Yaylı", "Flüt|Nefesli", "Klarnet|Nefesli", "Ney|Nefesli", "Zurna|Nefesli", "Saksafon|Nefesli", "Trompet|Nefesli",
+  "Obua|Nefesli", "Davul|Vurmalı", "Def|Vurmalı", "Darbuka|Vurmalı", "Zil|Vurmalı", "Timpani|Vurmalı", "Piyano|Tuşlu", "Org|Tuşlu", "Akordeon|Tuşlu"];
+// grup|ülke|solist
+const BANDS = ["The Beatles|İngiltere|-", "Queen|İngiltere|Freddie Mercury", "ABBA|İsveç|-", "Metallica|ABD|James Hetfield", "Nirvana|ABD|Kurt Cobain", "U2|İrlanda|Bono", "AC/DC|Avustralya|-", "Scorpions|Almanya|Klaus Meine", "Rammstein|Almanya|Till Lindemann",
+  "Coldplay|İngiltere|Chris Martin", "a-ha|Norveç|Morten Harket", "Kraftwerk|Almanya|-", "Sepultura|Brezilya|-", "BTS|Güney Kore|-", "Blackpink|Güney Kore|-", "The Rolling Stones|İngiltere|Mick Jagger", "Guns N' Roses|ABD|Axl Rose", "The Doors|ABD|Jim Morrison",
+  "Led Zeppelin|İngiltere|Robert Plant", "Aerosmith|ABD|Steven Tyler", "Bon Jovi|ABD|Jon Bon Jovi", "Duman|Türkiye|Kaan Tangöze", "Mor ve Ötesi|Türkiye|Harun Tekin", "maNga|Türkiye|Ferman Akgül", "Yüksek Sadakat|Türkiye|Kutlu Özmakinacı", "Pink Floyd|İngiltere|-", "Oasis|İngiltere|-", "Radiohead|İngiltere|Thom Yorke",
+  "Green Day|ABD|Billie Joe Armstrong", "Linkin Park|ABD|-", "Bee Gees|İngiltere|-", "Dire Straits|İngiltere|Mark Knopfler", "Roxette|İsveç|Marie Fredriksson"];
+
+export const MUZIK: FactSet[] = [
+  { id: "eurovision", cat: "Müzik", sub: "Eurovision", diff: 3, rows: EUROVISION, asks: [{ t: "{0} Eurovision Şarkı Yarışması'nı hangi ülke kazanmıştır?", a: 1, by: [0], choice: true }] },
+  { id: "sarki", cat: "Müzik", sub: "Şarkılar", diff: 2, rows: SONGS, asks: [{ t: "“{0}” şarkısıyla özdeşleşen sanatçı ya da grup kimdir?", a: 1, by: [0], choice: true }] },
+  { id: "besteci", cat: "Müzik", sub: "Klasik müzik", diff: 2, rows: COMPOSERS, asks: [
+    { t: "“{2}” eserinin bestecisi kimdir?", a: 0, by: [2] },
+    { t: "{0} hangi ülkenin bestecisidir?", a: 1, by: [0], choice: true },
+  ] },
+  { id: "enstruman", cat: "Müzik", sub: "Çalgılar", diff: 1, rows: INSTR, asks: [{ t: "{0} hangi çalgı grubunda yer alır?", a: 1, by: [0], choice: true }] },
+  { id: "grup", cat: "Müzik", sub: "Gruplar", diff: 2, rows: BANDS, asks: [
+    { t: "{0} grubu hangi ülkelidir?", a: 1, by: [0], choice: true },
+    { t: "{0} grubunun solisti kimdir?", a: 2, by: [0], choice: true },
+  ] },
+];
+
+export const MUZIK_SINGLES: SingleSet[] = [{
+  id: "muz1", cat: "Müzik", sub: "Müzik bilgisi", diff: 1, rows: [
+    "Standart bir piyanoda kaç tuş bulunur?|88|seksen sekiz|76;96;61",
+    "Klasik gitarda kaç tel bulunur?|6|altı|4;5;7",
+    "Kemanın kaç teli vardır?|4|dört|3;5;6",
+    "Müzikte temel notaların sayısı kaçtır?|7|yedi|5;8;12",
+    "Orkestrayı yöneten kişiye ne denir?|Şef|Orkestra şefi|Solist;Konzertmeister;Bestekâr",
+    "Opera sanatçıları arasında en yüksek kadın ses türü hangisidir?|Soprano||Alto;Mezzo-soprano;Kontralto",
+    "Erkek seslerinin en alçağı hangisidir?|Bas||Bariton;Tenor;Kontrtenor",
+    "Beethoven'ın Dokuzuncu Senfonisi hangi şiirle biter?|Neşeye Övgü|Ode an die Freude;Ode to Joy|Aydınlanma Şarkısı;Barış Marşı;Özgürlük Türküsü",
+    "Mevlevi müziğinde kullanılan üflemeli çalgı hangisidir?|Ney||Zurna;Kaval;Mızıka",
+    "Türk halk müziğinin en yaygın telli çalgısı hangisidir?|Bağlama|Saz|Ud;Kanun;Tambur",
+    "Zurna ile birlikte çalınan vurmalı çalgı hangisidir?|Davul||Def;Darbuka;Zil",
+    "Eurovision'u 2003'te kazanan Türk sanatçı kimdir?|Sertab Erener|Sertab|Tarkan;Hadise;Ajda Pekkan",
+    "Sertab Erener'in Eurovision'u kazandığı şarkının adı nedir?|Everyway That I Can||Düm Tek Tek;Superstar;Deli",
+    "Mor ve Ötesi Eurovision'da hangi şarkıyla Türkiye'yi temsil etmiştir (2008)?|Deli||Aşk;Her Şeyi Yak;Şımarık",
+    "Hadise Eurovision'da hangi şarkıyla Türkiye'yi temsil etmiştir (2009)?|Düm Tek Tek||Deli;Superstar;Dönence",
+    "'Pop'un Prensi' lakabıyla anılan Türk sanatçı kimdir?|Tarkan||Mustafa Sandal;Kenan Doğulu;Murat Boz",
+    "'Minik Serçe' lakabıyla anılan sanatçı kimdir?|Sezen Aksu||Ajda Pekkan;Nilüfer;Sertab Erener",
+    "'Pop Kraliçesi' lakabıyla anılan Türk sanatçı kimdir?|Ajda Pekkan||Sezen Aksu;Nilüfer;Yıldız Tilbe",
+    "'Kral' lakabıyla anılan rock and roll sanatçısı kimdir?|Elvis Presley|Elvis|Chuck Berry;Little Richard;Johnny Cash",
+    "'Pop Kralı' lakabıyla anılan sanatçı kimdir?|Michael Jackson||Prince;Elvis Presley;George Michael",
+    "Beatles'ın dört üyesi hangi şehirden çıkmıştır?|Liverpool||Londra;Manchester;Birmingham",
+    "Freddie Mercury hangi grubun solistidir?|Queen||The Beatles;Led Zeppelin;Pink Floyd",
+    "Bob Dylan 2016'da hangi Nobel Ödülü'nü kazanmıştır?|Edebiyat|Nobel Edebiyat Ödülü|Barış;Kimya;Fizik",
+    "Grammy Ödülleri hangi sektörün ödülleridir?|Müzik||Sinema;Tiyatro;Edebiyat",
+    "Müzikte 'forte' ne anlama gelir?|Güçlü, yüksek sesle|Gür|Yavaş;Hızlı;Yumuşak",
+    "Müzikte 'piano' (p) ne anlama gelir?|Yumuşak, hafif sesle|Hafif|Hızlı;Güçlü;Yavaş",
+    "Müzikte 'allegro' ne anlama gelir?|Hızlı|Canlı ve hızlı|Yavaş;Ağır;Sessiz",
+    "Müzikte 'adagio' ne anlama gelir?|Ağır, yavaş|Yavaş|Hızlı;Canlı;Gür",
+    "Bir orkestrada yaylı çalgıların en büyüğü hangisidir?|Kontrbas||Viyola;Viyolonsel;Keman",
+    "Caz müziğinin doğduğu şehir hangisidir?|New Orleans||New York;Chicago;Memphis",
+    "Tango müziği hangi ülkeyle özdeşleşmiştir?|Arjantin||Brezilya;İspanya;Küba",
+    "Flamenko hangi ülkenin geleneksel müzik ve dans türüdür?|İspanya||İtalya;Portekiz;Meksika",
+    "Samba hangi ülkeyle özdeşleşmiştir?|Brezilya||Küba;Arjantin;Meksika",
+    "K-pop hangi ülkenin pop müzik akımıdır?|Güney Kore|Kore|Japonya;Çin;Tayland",
+    "Reggae müziğiyle özdeşleşen ülke hangisidir?|Jamaika||Küba;Haiti;Brezilya",
+    "Bob Marley hangi müzik türüyle tanınır?|Reggae||Caz;Rock;Hip-hop",
+    "Mozart hangi ülkenin Salzburg şehrinde doğmuştur?|Avusturya||Almanya;İsviçre;Macaristan",
+    "Beethoven hangi şehirde doğmuştur?|Bonn||Viyana;Berlin;Salzburg",
+    "Kuğu Gölü balesinin bestecisi kimdir?|Çaykovski|Tchaikovsky|Prokofiev;Stravinski;Dvořák",
+    "Fındıkkıran balesinin bestecisi kimdir?|Çaykovski|Tchaikovsky|Prokofiev;Stravinski;Chopin",
+    "'Küçük Gece Müziği' adlı eserin bestecisi kimdir?|Mozart||Beethoven;Bach;Haydn",
+    "'Dört Mevsim' adlı eserin bestecisi kimdir?|Vivaldi||Bach;Mozart;Händel",
+    "'Boléro' adlı eserin bestecisi kimdir?|Ravel||Debussy;Bizet;Satie",
+    "Türk Sanat Müziği'nin 'Sanat Güneşi' lakaplı sanatçısı kimdir?|Zeki Müren||Müzeyyen Senar;Bülent Ersoy;Neşet Ertaş",
+    "Anadolu rock'ın öncülerinden 'Baba' lakaplı sanatçı kimdir?|Erkin Koray||Cem Karaca;Barış Manço;Moğollar",
+    "'Gül Pembe' ve 'Dönence' gibi parçalarıyla tanınan sanatçı kimdir?|Barış Manço||Cem Karaca;Erkin Koray;Fikret Kızılok",
+    "'Bozkırın Tezenesi' lakaplı halk ozanı kimdir?|Neşet Ertaş||Aşık Veysel;Mahzuni Şerif;Ruhi Su",
+    "Aşık Veysel hangi çalgıyı çalıyordu?|Bağlama|Saz|Kemençe;Ud;Kaval",
+    "Sivas'ın ünlü halk ozanı 'Kara Toprak' türküsünün sanatçısı kimdir?|Aşık Veysel|Veysel|Neşet Ertaş;Âşık Mahzuni;Ruhi Su",
+  ],
+}];
