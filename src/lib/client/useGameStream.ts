@@ -2,13 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 
 /** SSE akışı + sunucu saati farkı. EventSource kopunca kendisi yeniden bağlanır. */
-export function useGameStream<T extends { serverNow: number }>(gameId: string | null, role: "host" | "tv" | "player", token: string | null) {
+export function useGameStream<T extends { serverNow: number }>(gameId: string | null, role: "host" | "tv" | "player", token: string | null, extra = "") {
   const [view, setView] = useState<T | null>(null);
   const [connected, setConnected] = useState(false);
   const offset = useRef(0); // sunucu - istemci
   useEffect(() => {
     if (!gameId || !token) return;
-    const es = new EventSource(`/api/games/${gameId}/events?role=${role}&token=${encodeURIComponent(token)}`);
+    const es = new EventSource(`/api/games/${gameId}/events?role=${role}&token=${encodeURIComponent(token)}${extra}`);
     es.onopen = () => setConnected(true);
     es.onerror = () => setConnected(false);
     es.onmessage = (e) => {
@@ -18,7 +18,7 @@ export function useGameStream<T extends { serverNow: number }>(gameId: string | 
       setConnected(true);
     };
     return () => es.close();
-  }, [gameId, role, token]);
+  }, [gameId, role, token, extra]);
   const serverNow = () => Date.now() + offset.current;
   return { view, connected, serverNow };
 }

@@ -1,54 +1,72 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Flip } from "@/components/Flip";
 import { Pul } from "@/components/Pul";
 import { QR } from "@/components/QR";
 import { Sure } from "@/components/Sure";
+import { brandStyle, type BrandView } from "@/lib/client/brandStyle";
+import { dingSound, tickSound } from "@/lib/client/sound";
 import { useGameStream, useWakeLock } from "@/lib/client/useGameStream";
 import { BRAND } from "@config/brand";
 
-interface TvTeam { id: string; rank: number; name: string; color: string; emoji: string; score: number; members: number }
+interface TvTeam { id: string; rank: number; name: string; color: string; emoji: string; score: number; members: number; locked?: boolean }
 interface TvView {
-  serverNow: number; code: string; venueName: string; phase: string; openedAt: number | null; deadline: number | null;
-  question: null | { index: number; total: number; category: string; kind: string; text: string; options: string[] | null; correct?: string; explanation?: string | null };
+  serverNow: number; code: string; venueName: string; phase: string; mode: string; openedAt: number | null; deadline: number | null; brand: BrandView | null; watermark: boolean; paused: boolean;
+  question: null | { index: number; total: number; category: string; kind: string; round: string; roundNo: number; roundLabel: string; text: string | null; image: string | null;
+    options: string[] | null; items: string[] | null; left: string[] | null; right: string[] | null; correct?: string; explanation?: string | null };
   teams: TvTeam[];
 }
+const ROUND_NAME: Record<string, string> = { all: "", speed: "Hız turu", wager: "Bahis turu", final: "Final sorusu" };
+const MODE_NAME: Record<string, string> = { captain: "Kaptan cevaplar", majority: "Masa oylar", individual: "Herkes ayrı cevaplar" };
 
 export default function TvPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [token, setToken] = useState<string | null>(null);
   const [simple, setSimple] = useState(false);
+  const [sound, setSound] = useState(false);
+  const [origin, setOrigin] = useState("");
   useEffect(() => {
     const q = new URLSearchParams(location.search);
-    setToken(q.get("t"));
-    setSimple(q.get("basit") === "1");
+    setToken(q.get("t")); setSimple(q.get("basit") === "1"); setSound(q.get("ses") === "1"); setOrigin(location.origin);
   }, []);
   useWakeLock();
   const { view, connected, serverNow } = useGameStream<TvView>(id, "tv", token);
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(location.origin), []);
+
+  // Sesler (isteğe bağlı): son 5 sn tik, cevap açılınca zil
+  const lastPhase = useRef("");
+  useEffect(() => { if (sound && view && lastPhase.current !== view.phase) { if (view.phase === "answer_reveal") dingSound(); lastPhase.current = view.phase; } }, [view, sound]);
+  useEffect(() => {
+    if (!sound || view?.phase !== "question_open" || !view.deadline) return;
+    const iv = setInterval(() => { const left = (view.deadline ?? 0) - serverNow(); if (left > 0 && left <= 5000) tickSound(); }, 1000);
+    return () => clearInterval(iv);
+  }, [sound, view?.phase, view?.deadline, serverNow]);
 
   if (!token) return <main style={{ padding: "2rem" }}><p>TV bağlantısı geçersiz. Host panelinden yeni bağlantı al.</p></main>;
   if (!view) return <main style={{ padding: "2rem" }}><p>Bağlanıyor…</p></main>;
 
   const joinUrl = `${origin}/j/${view.code}`;
   const q = view.question;
-  const showQ = q && ["question_open", "question_locked", "answer_reveal"].includes(view.phase);
+  const showQ = q && q.text && ["question_open", "question_locked", "answer_reveal"].includes(view.phase);
   const showBoard = view.phase === "scoreboard" || view.phase === "final";
+  const sponsor = view.phase === "final" ? `Bu gece ${view.venueName} sundu` : null;
 
   return (
-    <main className={simple ? "basit" : ""} style={{ minHeight: "100dvh", cursor: "none", display: "grid", gridTemplateRows: "auto 1fr auto", gap: "1.5rem", padding: "2vw", fontSize: "clamp(18px, 1.6vw, 28px)" }}>
-      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <h1 style={{ fontSize: "clamp(32px, 3.4vw, 64px)" }}>{view.venueName}</h1>
-        {q && view.phase !== "lobby" && <p className="display tabular" style={{ fontSize: "clamp(24px, 2.4vw, 44px)", color: "var(--lamba)", margin: 0 }}>Soru {q.index + 1}/{q.total} · {q.category}</p>}
+    <main className={simple ? "basit" : ""} style={{ minHeight: "100dvh", cursor: "none", display: "grid", gridTemplateRows: "auto 1fr auto", gap: "1.5rem", padding: "2vw", fontSize: "clamp(18px, 1.6vw, 28px)", ...brandStyle(view.brand) }}>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "1.2rem" }}>
+          {view.brand?.logo && /* eslint-disable-next-line @next/next/no-img-element */ <img src={view.brand.logo} alt="" style={{ height: "clamp(40px, 5vw, 90px)", maxWidth: "20vw", objectFit: "contain" }} />}
+          <h1 style={{ fontSize: "clamp(32px, 3.4vw, 64px)" }}>{view.venueName}</h1>
+        </div>
+        {q && view.phase !== "lobby" && <p className="display tabular" style={{ fontSize: "clamp(24px, 2.4vw, 44px)", color: "var(--lamba)", margin: 0, textAlign: "right" }}>
+          Soru {q.index + 1}/{q.total} · {q.category}{ROUND_NAME[q.round] ? ` · ${ROUND_NAME[q.round]}` : ""}</p>}
       </header>
 
       {view.phase === "lobby" && (
         <section style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4vw", alignItems: "start" }}>
           <div>
-            <QR text={joinUrl} size={Math.min(420, 360)} label={`${view.venueName} oyununa katılmak için QR kod`} />
+            <QR text={joinUrl} size={360} label={`${view.venueName} oyununa katılmak için QR kod`} />
             <p className="display tabular" style={{ fontSize: "clamp(48px, 6vw, 110px)", color: "var(--lamba)", margin: ".5rem 0 0" }}>{view.code}</p>
-            <p style={{ margin: 0 }}>Telefonla okut, takımını kur.</p>
+            <p style={{ margin: 0 }}>Telefonla okut, takımını kur. Telefonlar sadece cevap içindir.</p>
           </div>
           <div>
             <h2 style={{ fontSize: "clamp(32px, 3.4vw, 64px)", marginBottom: "1rem" }}>{view.teams.length ? `${view.teams.length} takım hazır` : "Takımlar bekleniyor"}</h2>
@@ -65,7 +83,11 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
       )}
 
       {view.phase === "round_intro" && (
-        <section><h2 style={{ fontSize: "clamp(48px, 7vw, 130px)" }}>Hazır olun</h2><p style={{ fontSize: "1.4em" }}>Cevabı kaptan gönderir. Masada konuşabilirsiniz.</p></section>
+        <section>
+          <h2 style={{ fontSize: "clamp(48px, 7vw, 130px)" }}>{q?.roundLabel || "Hazır olun"}</h2>
+          {q && ROUND_NAME[q.round] && <p className="display" style={{ fontSize: "clamp(28px, 3vw, 56px)", color: "var(--lamba)", margin: 0 }}>{ROUND_NAME[q.round]}</p>}
+          <p style={{ fontSize: "1.4em" }}>{q && (q.round === "wager" || q.round === "final") ? "Soruyu görmeden bahsinizi girin." : `${MODE_NAME[view.mode]}. Masada konuşabilirsiniz.`}</p>
+        </section>
       )}
 
       {showQ && q && (
@@ -73,23 +95,31 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
           <div style={{ display: "grid", gap: "1.5rem" }}>
             <div className="fis">
               <p style={{ fontSize: "clamp(32px, 4.2vw, 72px)", lineHeight: 1.15, fontWeight: 700, margin: 0 }}>{q.text}</p>
+              {q.image && /* eslint-disable-next-line @next/next/no-img-element */ <img src={q.image} alt="" style={{ maxHeight: "38vh", maxWidth: "100%", marginTop: "1rem", borderRadius: 6 }} />}
               {q.options && (
                 <ol style={{ listStyle: "upper-alpha", fontSize: "clamp(24px, 2.8vw, 48px)", margin: "1rem 0 0", paddingLeft: "1.6em", display: "grid", gap: ".3rem" }}>
-                  {q.options.map((o) => (
-                    <li key={o} style={view.phase === "answer_reveal" && o === q.correct ? { fontWeight: 800, textDecoration: "underline" } : undefined}>
-                      {o}{view.phase === "answer_reveal" && o === q.correct ? " ✓" : ""}
-                    </li>
-                  ))}
+                  {q.options.map((o) => <li key={o} style={view.phase === "answer_reveal" && o === q.correct ? { fontWeight: 800, textDecoration: "underline" } : undefined}>{o}{view.phase === "answer_reveal" && o === q.correct ? " ✓" : ""}</li>)}
                 </ol>
               )}
+              {q.items && <ul style={{ fontSize: "clamp(24px, 2.8vw, 48px)", margin: "1rem 0 0", display: "flex", gap: "1rem", flexWrap: "wrap", listStyle: "none", padding: 0 }}>{q.items.map((i) => <li key={i} style={{ border: "3px solid var(--murekkep)", borderRadius: 6, padding: ".2rem .8rem" }}>{i}</li>)}</ul>}
+              {q.left && q.right && (
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "3rem", fontSize: "clamp(24px, 2.8vw, 48px)", marginTop: "1rem" }}>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>{q.left.map((l) => <li key={l}>{l}</li>)}</ul>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", textAlign: "right" }}>{q.right.map((r) => <li key={r}>{r}</li>)}</ul>
+                </div>
+              )}
+              {q.kind === "estimate" && <p style={{ margin: ".8rem 0 0", fontSize: "1.2em" }}>En yakın tahmin kazanır.</p>}
             </div>
             {view.phase === "answer_reveal" ? (
               <div className="fis" style={{ background: "var(--lamba)" }}>
                 <p className="display" style={{ fontSize: "clamp(32px, 4vw, 72px)", margin: 0 }}>Doğru cevap: {q.correct}</p>
                 {q.explanation && <p style={{ margin: ".4rem 0 0", fontSize: "1.15em" }}>{q.explanation}</p>}
               </div>
-            ) : (
-              <Sure openedAt={view.openedAt} deadline={view.deadline} active={view.phase === "question_open"} serverNow={serverNow} big />
+            ) : <Sure openedAt={view.openedAt} deadline={view.deadline} active={view.phase === "question_open"} serverNow={serverNow} big />}
+            {view.phase === "question_open" && (
+              <div aria-label="Kilitlenen takımlar" style={{ display: "flex", gap: ".6rem", flexWrap: "wrap", minHeight: 56 }}>
+                {view.teams.filter((t) => t.locked).map((t) => <Pul key={t.id} color={t.color} emoji={t.emoji} size={52} drop={!simple} />)}
+              </div>
             )}
           </div>
           <MiniBoard teams={view.teams} simple={simple} />
@@ -98,14 +128,15 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
 
       {showBoard && (
         <section>
-          <h2 style={{ fontSize: "clamp(40px, 5vw, 90px)", marginBottom: "1rem" }}>{view.phase === "final" ? "Bu gecenin sıralaması" : "Skor tablosu"}</h2>
+          <h2 style={{ fontSize: "clamp(40px, 5vw, 90px)", marginBottom: "1rem" }}>{sponsor ?? "Skor tablosu"}</h2>
+          {view.phase === "final" && <p style={{ fontSize: "1.3em", margin: "0 0 1rem" }}>Bu gecenin sıralaması</p>}
           <Board teams={view.teams} simple={simple} large />
         </section>
       )}
 
       <footer style={{ display: "flex", justifyContent: "space-between", alignItems: "end", opacity: .9 }}>
         <p style={{ margin: 0 }}>{view.phase !== "lobby" && <>Katıl: <strong className="tabular">{origin.replace(/^https?:\/\//, "")}/j/{view.code}</strong></>}</p>
-        <p style={{ margin: 0, fontSize: ".8em" }}>{!connected && "Bağlantı koptu, yeniden bağlanıyor · "}{BRAND.name}</p>
+        <p style={{ margin: 0, fontSize: ".8em" }}>{!connected && "Bağlantı koptu, yeniden bağlanıyor · "}{view.paused && "Duraklatıldı · "}{view.watermark ? BRAND.name : ""}</p>
       </footer>
     </main>
   );

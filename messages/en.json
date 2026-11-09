@@ -1,0 +1,6 @@
+{
+  "app": { "tagline": "Your venue's quiz night, no app needed." },
+  "join": { "title": "Join the game", "name": "Your name", "newTeam": "Create a team", "joinTeam": "Join a team", "createBtn": "Create team", "joinBtn": "Join team", "teamName": "Team name" },
+  "play": { "lock": "Lock answer", "locked": "Answer locked, no changes allowed.", "send": "Send answer", "claim": "Take captaincy", "reconnecting": "Connection lost, reconnecting", "appeal": "Appeal", "joker": "Use joker" },
+  "host": { "advance": "Advance", "pause": "Pause", "end": "End game" }
+}

@@ -17,7 +17,7 @@ export default function Landing() {
     <main style={{ maxWidth: 1080, margin: "0 auto", padding: "1.25rem" }}>
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
         <span className="display" style={{ fontSize: "1.8rem" }}>{BRAND.name}</span>
-        <a href="#fiyat" style={{ color: "var(--lamba)" }}>Fiyatlar</a>
+        <span style={{ display: "flex", gap: "1.2rem", alignItems: "center" }}><a href="#fiyat" style={{ color: "var(--lamba)" }}>Fiyatlar</a><a href="/demo" style={{ color: "var(--lamba)" }}>Kendin dene</a><a href="/giris" style={{ color: "var(--lamba)" }}>Giriş</a></span>
       </nav>
 
       <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2.5rem", alignItems: "center" }}>
@@ -25,6 +25,7 @@ export default function Landing() {
           <h1 style={{ fontSize: "clamp(2.8rem, 8vw, 5.5rem)" }}>Boş salı gecenizi doldurun.</h1>
           <p style={{ fontSize: "1.2rem", maxWidth: "34ch" }}>Sorular TV’de, oyuncular telefonda. QR’ı okutan takım kurar ve oynar. Uygulama yok, hesap yok.</p>
           <StartDemo />
+          <p style={{ margin: ".8rem 0 0" }}><a href="/demo" style={{ color: "var(--lamba)" }}>Kayıt olmadan 5 soruluk demoyu dene</a> · <a href="/giris" style={{ color: "var(--lamba)" }}>Mekanını kaydet</a></p>
         </div>
         <DemoBoard />
       </section>
@@ -53,7 +54,7 @@ export default function Landing() {
         <p style={{ opacity: .8 }}>Fiyatlar pilot sonrası güncellenecek.</p>
       </section>
 
-      <footer style={{ margin: "4rem 0 2rem", opacity: .8 }}>© {BRAND.name} · <a href="/fonttest">Yazı tipi testi</a></footer>
+      <footer style={{ margin: "4rem 0 2rem", opacity: .85, display: "flex", gap: "1rem", flexWrap: "wrap" }}><span>© {BRAND.name}</span><a href="/gizlilik">Gizlilik</a><a href="/kvkk">KVKK</a><a href="/kosullar">Koşullar</a><a href="/cerez">Çerezler</a></footer>
     </main>
   );
 }

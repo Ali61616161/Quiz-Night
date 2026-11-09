@@ -5,6 +5,7 @@ import { errorResponse } from "@/lib/server/actions";
 import { fail, json, requireVenue } from "@/lib/server/api";
 import { audit, db, save } from "@/lib/server/db";
 import { sanitizeSvg, sniffImage, MAX_LOGO } from "@/lib/server/svg";
+import { sendMail } from "@/lib/server/mail";
 import { closeSeason, effectivePlan, leagueTable, monthKey, venueStats } from "@/lib/server/venue";
 import { contrast } from "@/lib/brand";
 import { parseCsv } from "@/lib/csv";
@@ -94,6 +95,10 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
         const b = z.object({ title: z.string().trim().min(2).max(60), weekday: z.number().int().min(0).max(6), time: z.string().regex(/^\d{2}:\d{2}$/), remindEmail: z.boolean().default(true) }).parse(body);
         if (v.schedules.length >= 20) return fail(400, "limit", "En fazla 20 takvim kaydı.");
         v.schedules.push({ id: Math.random().toString(36).slice(2, 10), ...b }); save(); return json({ ok: true });
+      }
+      case "support": {
+        const b2 = z.object({ subject: z.string().trim().min(3).max(100), message: z.string().trim().min(10).max(2000) }).parse(body);
+        sendMail(process.env.SUPPORT_EMAIL || "destek@localhost", `[Destek] ${b2.subject}`, `${v.name} (${s.user.email}, ${PLANS[plan].name}): ${b2.message}`); return json({ ok: true });
       }
       case "schedule_delete": { v.schedules = v.schedules.filter((x) => x.id !== body.id); save(); return json({ ok: true }); }
       case "league_close": { if (!can(plan, "league")) return fail(402, "plan", "Lig Marka planında."); closeSeason(v); return json({ ok: true }); }

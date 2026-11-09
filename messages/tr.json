@@ -1,0 +1,6 @@
+{
+  "app": { "tagline": "Mekanın quiz gecesi, telefon çıkarmadan." },
+  "join": { "title": "Oyuna katıl", "name": "Adın", "newTeam": "Yeni takım kur", "joinTeam": "Takıma katıl", "createBtn": "Takımını kur", "joinBtn": "Takıma katıl", "teamName": "Takım adı" },
+  "play": { "lock": "Cevabı kilitle", "locked": "Cevap kilitlendi, değişiklik yapılamaz.", "send": "Cevabı gönder", "claim": "Kaptanlığı al", "reconnecting": "Bağlantı koptu, yeniden bağlanıyor", "appeal": "İtiraz et", "joker": "Joker kullan" },
+  "host": { "advance": "İlerlet", "pause": "Duraklat", "end": "Oyunu bitir" }
+}

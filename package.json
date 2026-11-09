@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "demo": "next dev",
+    "demo": "node scripts/demo.mjs",
     "e2e": "node e2e/full-game.mjs",
     "start:e2e": "next start -p 3100"
   },
