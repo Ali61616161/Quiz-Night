@@ -1,37 +1,38 @@
 import type { Phase } from "./types";
 
-/** Durum makinesi: lobby → round_intro → question_open → question_locked → answer_reveal → scoreboard → (sonraki) → final */
-export function nextPhase(phase: Phase, hasMoreQuestions: boolean): Phase {
+/** lobby → round_intro → question_open → question_locked → answer_reveal → scoreboard → (sonraki) → final */
+export function nextPhase(phase: Phase, hasMore: boolean, nextNeedsIntro = false): Phase {
   switch (phase) {
     case "lobby": return "round_intro";
     case "round_intro": return "question_open";
     case "question_open": return "question_locked";
     case "question_locked": return "answer_reveal";
     case "answer_reveal": return "scoreboard";
-    case "scoreboard": return hasMoreQuestions ? "question_open" : "final";
+    case "scoreboard": return hasMore ? (nextNeedsIntro ? "round_intro" : "question_open") : "final";
     case "final": return "final";
   }
 }
 
 export const PHASE_LABEL: Record<Phase, string> = {
-  lobby: "Lobi",
-  round_intro: "Tur girişi",
-  question_open: "Soru açık",
-  question_locked: "Süre doldu",
-  answer_reveal: "Cevap",
-  scoreboard: "Skor tablosu",
-  final: "Final",
+  lobby: "Lobi", round_intro: "Tur girişi", question_open: "Soru açık", question_locked: "Süre doldu",
+  answer_reveal: "Cevap", scoreboard: "Skor tablosu", final: "Final",
 };
 
-/** Host Coach: şimdi ne yap + söylenecek tek cümle. */
-export function coach(phase: Phase, teamCount: number): { do: string; say: string } {
+/** Auto-Host bekleme süreleri (ms). question_open süresi soru süresidir. */
+export const AUTO_DELAY: Partial<Record<Phase, number>> = {
+  lobby: 0, round_intro: 8000, question_locked: 2500, answer_reveal: 9000, scoreboard: 7000,
+};
+
+export function coach(phase: Phase, teamCount: number, wager = false): { do: string; say: string } {
   switch (phase) {
     case "lobby":
       return teamCount < 2
         ? { do: "QR kodu göster, en az 2 takım bekle.", say: "Telefonunuzla ekrandaki kodu okutun, takımınızı kurun." }
         : { do: "Takımlar hazırsa oyunu başlat.", say: "Telefonlar sadece cevap içindir. Başlıyoruz!" };
     case "round_intro":
-      return { do: "Kuralı söyle, soruyu aç.", say: "Cevabı kaptan gönderir, masada konuşabilirsiniz." };
+      return wager
+        ? { do: "Takımların bahsini bekle, hazırsa soruyu aç.", say: "Soruyu görmeden bahsinizi girin." }
+        : { do: "Kuralı söyle, soruyu aç.", say: "Cevabı kaptan gönderir, masada konuşabilirsiniz." };
     case "question_open":
       return { do: "Süre akıyor. Herkes cevapladıysa erken kilitle.", say: "Süre bitmeden cevabı kilitleyin." };
     case "question_locked":

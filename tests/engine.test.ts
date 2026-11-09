@@ -87,8 +87,8 @@ describe("oyun", () => {
     const { g, a } = setup();
     expect(() => suggest(g, a.memberToken, "x")).toThrow();
     advance(g, 0); advance(g, 0);
-    suggest(g, a.memberToken, "Ankara");
-    expect(g.suggestions[a.teamId][a.memberId]).toBe("Ankara");
+    suggest(g, a.memberToken, "Ankara", 1);
+    expect(g.suggestions[a.teamId][a.memberId].value).toBe("Ankara");
   });
 
   it("host düzeltmesi puanı anında yansıtır", () => {
