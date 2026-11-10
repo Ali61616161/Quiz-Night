@@ -27,8 +27,9 @@ function numericDistractors(v: number, r: () => number): string[] {
 }
 
 import { ESTIMATES, ORDERINGS } from "./facts";
-import { ASK_EN, hasTurkish, toEn } from "./en";
-import { estimates, expand, expandSingles, matchings, orderings } from "./gen";
+import { ASK_EN, toEn } from "./en";
+import { estimates, expand, expandSingles, matchings, orderings, type EnHelper } from "./gen";
+import { SINGLES_EN, applyOverlay } from "./sets-en";
 import { BILIM, BILIM_SINGLES } from "./sets/bilim";
 import { DIZIFILM, DIZIFILM_SINGLES } from "./sets/dizifilm";
 import { EDEBIYAT, EDEBIYAT_SINGLES } from "./sets/edebiyat";
@@ -50,75 +51,71 @@ import { TEKNOLOJI, TEKNOLOJI_SINGLES } from "./sets/teknoloji";
 export const ALL_SETS = [...GEO, ...TARIH, ...BILIM, ...FUTBOL, ...SPOR, ...DIZIFILM, ...MUZIK, ...EDEBIYAT, ...SANAT, ...YEMEK, ...OYUN, ...KAMPUS, ...YEREL, ...GENEL, ...GUNDEM, ...TEKNOLOJI, ...DOGA];
 const ALL_SINGLES = [...GEO_SINGLES, ...TARIH_SINGLES, ...BILIM_SINGLES, ...FUTBOL_SINGLES, ...SPOR_SINGLES, ...DIZIFILM_SINGLES, ...MUZIK_SINGLES, ...EDEBIYAT_SINGLES, ...SANAT_SINGLES, ...YEMEK_SINGLES, ...OYUN_SINGLES, ...KAMPUS_SINGLES, ...YEREL_SINGLES, ...GENEL_SINGLES, ...GUNDEM_SINGLES, ...TEKNOLOJI_SINGLES, ...DOGA_SINGLES];
 
+const ENX = { ask: ASK_EN, toEn };
+const E = (label: string): EnHelper => ({ label, toEn });
+const ES = (t: (x: string) => string): EnHelper & { t: (x: string) => string } => ({ label: "", toEn, t });
+
 function build(): Question[] {
-  const out: Question[] = [...expand(ALL_SETS), ...expandSingles(ALL_SINGLES)];
+  const out: Question[] = [...expand(ALL_SETS, ENX), ...expandSingles(ALL_SINGLES, SINGLES_EN)];
   const byId = (id: string) => ALL_SETS.find((x) => x.id === id)!;
+  const yearQ = (set: string, tr: (x: string) => string, en: (x: string) => string, item: number, num: number, k: number) =>
+    estimates(byId(set), { t: (x) => `${tr(x)} (En yakın tahmin kazanır)`, item, num, k }, ES((x) => `${en(x)} (The closest estimate wins)`));
   out.push(
-    ...orderings(byId("olay"), { label: () => "Olayları eskiden yeniye doğru sırala.", item: 0, num: 1, k: 40, gap: 15 }),
-    ...orderings(byId("padisah"), { label: () => "Osmanlı padişahlarını tahta çıkış sırasına göre diz.", item: 1, num: 0, k: 10, gap: 3 }),
-    ...orderings(byId("dk"), { label: () => "Dünya Kupası şampiyonlarını (turnuva yılına göre) eskiden yeniye diz.", item: 1, num: 0, k: 8, gap: 8, fmt: (r) => `${r[1].split(";")[0]} (${r[0]})` }),
-    ...orderings(byId("oy"), { label: () => "Yaz Olimpiyatlarının düzenlendiği şehirleri eskiden yeniye diz.", item: 1, num: 0, k: 8, gap: 8, fmt: (r) => `${r[1]} (${r[0]})` }),
-    ...orderings(byId("konsol"), { label: () => "Konsolları çıkış yılına göre eskiden yeniye diz.", item: 0, num: 2, k: 6, gap: 4 }),
-    ...orderings(byId("oyun"), { label: () => "Oyunları çıkış yılına göre eskiden yeniye diz.", item: 0, num: 2, k: 10, gap: 6 }),
-    ...orderings(byId("film"), { label: () => "Filmleri vizyon yılına göre eskiden yeniye diz.", item: 0, num: 2, k: 10, gap: 6 }),
-    ...orderings(byId("dizi"), { label: () => "Dizileri ilk yayın yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 6, gap: 5 }),
-    ...orderings(byId("element"), { label: () => "Elementleri atom numarasına göre küçükten büyüğe diz.", item: 0, num: 2, k: 10, gap: 4 }),
-    ...orderings(byId("il"), { label: () => "İlleri plaka kodlarına göre küçükten büyüğe diz.", item: 0, num: 1, k: 10, gap: 5 }),
-    ...matchings(byId("cap"), { text: "Ülkeleri başkentleriyle eşleştir.", left: 0, right: 1, k: 14 }),
-    ...matchings(byId("il"), { text: "Bu illeri plaka kodlarıyla eşleştir.", left: 0, right: 1, k: 8 }),
-    ...matchings(byId("abd"), { text: "ABD eyaletlerini başkentleriyle eşleştir.", left: 0, right: 1, k: 8 }),
-    ...matchings(byId("element"), { text: "Elementleri simgeleriyle eşleştir.", left: 0, right: 1, k: 10 }),
-    ...matchings(byId("kitap"), { text: "Eserleri yazarlarıyla eşleştir.", left: 0, right: 1, k: 10 }),
-    ...matchings(byId("sarki"), { text: "Şarkıları sanatçılarıyla eşleştir.", left: 0, right: 1, k: 10 }),
-    ...matchings(byId("film"), { text: "Filmleri yönetmenleriyle eşleştir.", left: 0, right: 1, k: 8 }),
-    ...matchings(byId("marka"), { text: "Markaları ülkeleriyle eşleştir.", left: 0, right: 1, k: 8 }),
-    ...matchings(byId("yore"), { text: "Yöresel lezzetleri illeriyle eşleştir.", left: 0, right: 1, k: 6 }),
-    ...matchings(byId("tru"), { text: "Üniversiteleri şehirleriyle eşleştir.", left: 0, right: 1, k: 6 }),
-    ...matchings(byId("kulup"), { text: "Kulüpleri ülkeleriyle eşleştir.", left: 0, right: 1, k: 6 }),
-    ...matchings(byId("sporcu"), { text: "Sporcuları spor dallarıyla eşleştir.", left: 0, right: 1, k: 6 }),
-    ...matchings(byId("muze"), { text: "Müzeleri şehirleriyle eşleştir.", left: 0, right: 1, k: 6 }),
-    ...orderings(byId("gundem"), { label: () => "Olayları eskiden yeniye doğru sırala.", item: 0, num: 1, k: 24, gap: 2 }),
-    ...orderings(byId("sirket"), { label: () => "Şirketleri kuruluş yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 6, gap: 4 }),
-    ...orderings(byId("lansman"), { label: () => "Teknolojileri ortaya çıkış yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 8, gap: 4 }),
-    ...matchings(byId("sirket"), { text: "Şirketleri kurucularıyla eşleştir.", left: 0, right: 2, k: 4 }),
-    ...matchings(byId("kisaltma"), { text: "Kısaltmaları açılımlarıyla eşleştir.", left: 0, right: 1, k: 6 }),
-    ...matchings(byId("progdil"), { text: "Programlama dillerini geliştiricileriyle eşleştir.", left: 0, right: 1, k: 3 }),
-    ...matchings(byId("bulus"), { text: "Buluşları mucitleriyle eşleştir.", left: 0, right: 1, k: 4 }),
-  );
-  out.push(
-    ...estimates(byId("olay"), { t: (x) => `${x} hangi yıl gerçekleşmiştir? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 60 }),
-    ...estimates(byId("film"), { t: (x) => `“${x}” filmi hangi yıl vizyona girmiştir? (En yakın tahmin kazanır)`, item: 0, num: 2, k: 25 }),
-    ...estimates(byId("oyun"), { t: (x) => `${x} oyunu hangi yıl çıkmıştır? (En yakın tahmin kazanır)`, item: 0, num: 2, k: 25 }),
-    ...estimates(byId("dizi"), { t: (x) => `“${x}” dizisi hangi yıl yayına başlamıştır? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
-    ...estimates(byId("konsol"), { t: (x) => `${x} hangi yıl piyasaya çıkmıştır? (En yakın tahmin kazanır)`, item: 0, num: 2, k: 10 }),
-    ...estimates(byId("dogum"), { t: (x) => `${x} hangi yıl doğmuştur? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
-    ...estimates(byId("kdn"), { t: (x) => `${x} hangi yıl kurulmuştur? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
-    ...estimates(byId("gundem"), { t: (x) => `${x} hangi yıl gerçekleşmiştir? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 40 }),
-    ...estimates(byId("sirket"), { t: (x) => `${x} hangi yıl kurulmuştur? (En yakın tahmin kazanır)`, item: 0, num: 1, k: 15 }),
-    ...estimates(byId("element"), { t: (x) => `${x} elementinin atom numarası kaçtır? (En yakın tahmin kazanır)`, item: 0, num: 2, k: 20 }),
+    ...orderings(byId("olay"), { label: () => "Olayları eskiden yeniye doğru sırala.", item: 0, num: 1, k: 40, gap: 15 }, E("Put the events in order, oldest to newest.")),
+    ...orderings(byId("padisah"), { label: () => "Osmanlı padişahlarını tahta çıkış sırasına göre diz.", item: 1, num: 0, k: 10, gap: 3 }, E("Put the Ottoman sultans in the order they took the throne.")),
+    ...orderings(byId("dk"), { label: () => "Dünya Kupası şampiyonlarını (turnuva yılına göre) eskiden yeniye diz.", item: 1, num: 0, k: 8, gap: 8, fmt: (r) => `${r[1].split(";")[0]} (${r[0]})` }, E("Put the World Cup winners in order by tournament year, oldest to newest.")),
+    ...orderings(byId("oy"), { label: () => "Yaz Olimpiyatlarının düzenlendiği şehirleri eskiden yeniye diz.", item: 1, num: 0, k: 8, gap: 8, fmt: (r) => `${r[1]} (${r[0]})` }, E("Put the Summer Olympics host cities in order, oldest to newest.")),
+    ...orderings(byId("konsol"), { label: () => "Konsolları çıkış yılına göre eskiden yeniye diz.", item: 0, num: 2, k: 6, gap: 4 }, E("Put the consoles in order of release year, oldest to newest.")),
+    ...orderings(byId("oyun"), { label: () => "Oyunları çıkış yılına göre eskiden yeniye diz.", item: 0, num: 2, k: 10, gap: 6 }, E("Put the games in order of release year, oldest to newest.")),
+    ...orderings(byId("film"), { label: () => "Filmleri vizyon yılına göre eskiden yeniye diz.", item: 0, num: 2, k: 10, gap: 6 }, E("Put the films in order of release year, oldest to newest.")),
+    ...orderings(byId("dizi"), { label: () => "Dizileri ilk yayın yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 6, gap: 5 }, E("Put the TV series in order of first air year, oldest to newest.")),
+    ...orderings(byId("element"), { label: () => "Elementleri atom numarasına göre küçükten büyüğe diz.", item: 0, num: 2, k: 10, gap: 4 }, E("Put the elements in order of atomic number, smallest to largest.")),
+    ...orderings(byId("il"), { label: () => "İlleri plaka kodlarına göre küçükten büyüğe diz.", item: 0, num: 1, k: 10, gap: 5 }, E("Put the provinces in order of licence plate code, smallest to largest.")),
+    ...orderings(byId("gundem"), { label: () => "Olayları eskiden yeniye doğru sırala.", item: 0, num: 1, k: 24, gap: 2 }, E("Put the events in order, oldest to newest.")),
+    ...orderings(byId("sirket"), { label: () => "Şirketleri kuruluş yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 6, gap: 4 }, E("Put the companies in order of founding year, oldest to newest.")),
+    ...orderings(byId("lansman"), { label: () => "Teknolojileri ortaya çıkış yılına göre eskiden yeniye diz.", item: 0, num: 1, k: 8, gap: 4 }, E("Put the technologies in order of the year they appeared, oldest to newest.")),
+    ...matchings(byId("cap"), { text: "Ülkeleri başkentleriyle eşleştir.", left: 0, right: 1, k: 14 }, E("Match the countries with their capitals.")),
+    ...matchings(byId("il"), { text: "Bu illeri plaka kodlarıyla eşleştir.", left: 0, right: 1, k: 8 }, E("Match these provinces with their licence plate codes.")),
+    ...matchings(byId("abd"), { text: "ABD eyaletlerini başkentleriyle eşleştir.", left: 0, right: 1, k: 8 }, E("Match the US states with their capitals.")),
+    ...matchings(byId("element"), { text: "Elementleri simgeleriyle eşleştir.", left: 0, right: 1, k: 10 }, E("Match the elements with their symbols.")),
+    ...matchings(byId("kitap"), { text: "Eserleri yazarlarıyla eşleştir.", left: 0, right: 1, k: 10 }, E("Match the works with their authors.")),
+    ...matchings(byId("sarki"), { text: "Şarkıları sanatçılarıyla eşleştir.", left: 0, right: 1, k: 10 }, E("Match the songs with their artists.")),
+    ...matchings(byId("film"), { text: "Filmleri yönetmenleriyle eşleştir.", left: 0, right: 1, k: 8 }, E("Match the films with their directors.")),
+    ...matchings(byId("marka"), { text: "Markaları ülkeleriyle eşleştir.", left: 0, right: 1, k: 8 }, E("Match the brands with their countries.")),
+    ...matchings(byId("yore"), { text: "Yöresel lezzetleri illeriyle eşleştir.", left: 0, right: 1, k: 6 }, E("Match the regional specialties with their provinces.")),
+    ...matchings(byId("tru"), { text: "Üniversiteleri şehirleriyle eşleştir.", left: 0, right: 1, k: 6 }, E("Match the universities with their cities.")),
+    ...matchings(byId("kulup"), { text: "Kulüpleri ülkeleriyle eşleştir.", left: 0, right: 1, k: 6 }, E("Match the clubs with their countries.")),
+    ...matchings(byId("sporcu"), { text: "Sporcuları spor dallarıyla eşleştir.", left: 0, right: 1, k: 6 }, E("Match the athletes with their sports.")),
+    ...matchings(byId("muze"), { text: "Müzeleri şehirleriyle eşleştir.", left: 0, right: 1, k: 6 }, E("Match the museums with their cities.")),
+    ...matchings(byId("bulus"), { text: "Buluşları mucitleriyle eşleştir.", left: 0, right: 1, k: 4 }, E("Match the inventions with their inventors.")),
+    ...matchings(byId("sirket"), { text: "Şirketleri kurucularıyla eşleştir.", left: 0, right: 2, k: 4 }, E("Match the companies with their founders.")),
+    ...matchings(byId("kisaltma"), { text: "Kısaltmaları açılımlarıyla eşleştir.", left: 0, right: 1, k: 6 }, E("Match the abbreviations with their meanings.")),
+    ...matchings(byId("progdil"), { text: "Programlama dillerini geliştiricileriyle eşleştir.", left: 0, right: 1, k: 3 }, E("Match the programming languages with their creators.")),
+    ...yearQ("olay", (x) => `${x} hangi yıl gerçekleşmiştir?`, (x) => `In which year did this happen: ${x}?`, 0, 1, 60),
+    ...yearQ("film", (x) => `“${x}” filmi hangi yıl vizyona girmiştir?`, (x) => `In which year was the film “${x}” released?`, 0, 2, 25),
+    ...yearQ("oyun", (x) => `${x} oyunu hangi yıl çıkmıştır?`, (x) => `In which year was the game ${x} released?`, 0, 2, 25),
+    ...yearQ("dizi", (x) => `“${x}” dizisi hangi yıl yayına başlamıştır?`, (x) => `In which year did the TV series “${x}” first air?`, 0, 1, 15),
+    ...yearQ("konsol", (x) => `${x} hangi yıl piyasaya çıkmıştır?`, (x) => `In which year was the ${x} released?`, 0, 2, 10),
+    ...yearQ("dogum", (x) => `${x} hangi yıl doğmuştur?`, (x) => `In which year was ${x} born?`, 0, 1, 15),
+    ...yearQ("kdn", (x) => `${x} hangi yıl kurulmuştur?`, (x) => `In which year was ${x} founded?`, 0, 1, 15),
+    ...yearQ("gundem", (x) => `${x} hangi yıl gerçekleşmiştir?`, (x) => `In which year did this happen: ${x}?`, 0, 1, 40),
+    ...yearQ("sirket", (x) => `${x} hangi yıl kurulmuştur?`, (x) => `In which year was ${x} founded?`, 0, 1, 15),
+    ...yearQ("element", (x) => `${x} elementinin atom numarası kaçtır?`, (x) => `What is the atomic number of ${x}?`, 0, 2, 20),
   );
   // Elle yazılmış sıralama/tahmin soruları
-  ORDERINGS.forEach((o, i) => out.push({ id: `ord-${i}`, category: o.cat, difficulty: o.diff, kind: "ordering", text: o.text, items: o.items, correct: JSON.stringify(o.items), accepted: [], status: "approved", reports: 0 }));
-  ESTIMATES.forEach((e, i) => out.push({ id: `est-${i}`, category: e.cat, difficulty: e.diff, kind: "estimate", text: e.text, correct: String(e.answer), accepted: [], explanation: e.explain ?? `Doğru cevap yaklaşık ${e.answer.toLocaleString("tr-TR")}.`, status: "approved", reports: 0 }));
-  // Aynı metin iki kez üretildiyse ilkini tut (eşleştirme setleri hariç: metin ortak, kimlik farklı)
+  ORDERINGS.forEach((o, i) => out.push({ id: `ord-${i}`, category: o.cat, difficulty: o.diff, kind: "ordering", text: o.text, items: o.items, correct: JSON.stringify(o.items), accepted: [], status: "approved", reports: 0, en: { text: o.textEn ?? toEn(o.text) ?? "", items: o.itemsEn ?? o.items.map((x) => toEn(x) ?? x), correct: JSON.stringify(o.itemsEn ?? o.items.map((x) => toEn(x) ?? x)) } }));
+  ESTIMATES.forEach((e, i) => out.push({ id: `est-${i}`, category: e.cat, difficulty: e.diff, kind: "estimate", text: e.text, correct: String(e.answer), accepted: [], explanation: e.explain ?? `Doğru cevap yaklaşık ${e.answer.toLocaleString("tr-TR")}.`, status: "approved", reports: 0, en: { text: e.textEn ?? toEn(e.text) ?? "", correct: String(e.answer), explanation: `The correct answer is about ${e.answer.toLocaleString("en-US")}.` } }));
+  // Aynı metin iki kez üretildiyse ilkini tut (eşleştirme/sıralama setleri hariç: metin ortak, kimlik farklı)
   const seen = new Set<string>(); const uniq: Question[] = [];
   for (const q of out) {
     if (q.kind === "ordering" && q.items!.length < 3) continue;
     const key = q.kind === "matching" || q.kind === "ordering" ? q.id : normalizeTr(q.text);
     if (seen.has(key)) continue; seen.add(key); uniq.push(q);
   }
-  return uniq.filter((q, i, arr) => arr.findIndex((x) => x.id === q.id) === i);
+  return applyOverlay(uniq.filter((q, i, arr) => arr.findIndex((x) => x.id === q.id) === i));
 }
 
 export const BANK: Question[] = build();
-
-/** İngilizce havuz: aynı olgu tablolarından İngilizce şablon ve sözlükle üretilir; güvenilir çevirisi olmayan satırlar atlanır. */
-function buildEn(): Question[] {
-  const out = expand(ALL_SETS, "en", { ask: ASK_EN, toEn });
-  const seen = new Set<string>();
-  return out.filter((q) => { if (hasTurkish(q.text) || hasTurkish(q.correct) || (q.options ?? []).some(hasTurkish)) return false; const k = normalizeTr(q.text); if (seen.has(k)) return false; seen.add(k); return true; });
-}
-export const BANK_EN: Question[] = buildEn();
 
 /** Kalıcı zorluk düzeltmeleri (süper admin onayı) açılışta uygulanır. */
 export function applyDifficultyOverrides(o: Record<string, 1 | 2 | 3>) { for (const q of BANK) if (o[q.id]) q.difficulty = o[q.id]; }
@@ -184,7 +181,7 @@ export function buildNight(opts: {
 }): { questions: Question[]; low: boolean } {
   const tpl = TEMPLATES[opts.template];
   const r = rng(opts.seed ?? String(Math.random()));
-  const base = opts.lang === "en" ? BANK_EN : BANK;
+  const base = BANK;
   let cats = opts.theme ? THEMES[opts.theme]?.categories : undefined;
   // İngilizce havuzda bir konu yeterince soru içermiyorsa karışık havuza geçilir (host'a düşük havuz uyarısı gider)
   const thin = Boolean(cats && base.filter((q) => cats!.includes(q.category)).length < 60);

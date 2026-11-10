@@ -66,6 +66,7 @@ const NATURE = [
   "Garda Gölü|İtalya", "Ohrid Gölü|Kuzey Makedonya", "Van Gölü|Türkiye", "Tuz Gölü|Türkiye", "Eğirdir Gölü|Türkiye", "Beyşehir Gölü|Türkiye", "İznik Gölü|Türkiye", "Sapanca Gölü|Türkiye",
 ];
 
+const CONTS = /^(Asya|Avrupa|Afrika|Okyanusya|Kuzey Amerika|Güney Amerika|Antarktika)(;|$)/;
 export const GEO: FactSet[] = [
   { id: "cap", cat: "Coğrafya", sub: "Başkentler", diff: 1, rows: COUNTRIES, asks: [
     { t: "{0} ülkesinin başkenti neresidir?", a: 1, by: [0], near: 2 },
@@ -81,8 +82,11 @@ export const GEO: FactSet[] = [
     { t: "ABD'nin {0} eyaletinin başkenti neresidir?", a: 1, by: [0] },
     { t: "{1} hangi ABD eyaletinin başkentidir?", a: 0, by: [1] },
   ] },
-  { id: "doga", cat: "Coğrafya", sub: "Doğal coğrafya", diff: 2, rows: NATURE.map((r) => r.replace(/^([^|]+)\|/, "$1|")), asks: [
-    { t: "{0} hangi kıtada ya da ülkede yer alır?", a: 1, by: [0], choice: true },
+  { id: "doga", cat: "Coğrafya", sub: "Doğal coğrafya (kıta)", diff: 2, rows: NATURE.filter((r) => CONTS.test(r.split("|")[1])), asks: [
+    { t: "{0} hangi kıtada yer alır?", a: 1, by: [0], choice: true },
+  ] },
+  { id: "dogaulke", cat: "Coğrafya", sub: "Doğal coğrafya (ülke)", diff: 2, rows: NATURE.filter((r) => !CONTS.test(r.split("|")[1]) && !/Hazar|Lemán|Ohrid|Meriç|Grönland/.test(r)), asks: [
+    { t: "{0} hangi ülkede yer alır?", a: 1, by: [0], choice: true },
   ] },
 ];
 

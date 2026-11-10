@@ -24,14 +24,14 @@ const BOOKS = [
   "Araba Sevdası|Recaizade Mahmud Ekrem;Recaizade", "Aylak Adam|Yusuf Atılgan", "Anayurt Oteli|Yusuf Atılgan", "Devlet Ana|Kemal Tahir", "Bereketli Topraklar Üzerinde|Orhan Kemal", "Yılanların Öcü|Fakir Baykurt", "Sevgili Arsız Ölüm|Latife Tekin",
   "Zübük|Aziz Nesin", "Sarnıç|Sait Faik Abasıyanık;Sait Faik", "Memleketimden İnsan Manzaraları|Nazım Hikmet", "Garip (şiir kitabı)|Orhan Veli Kanık;Orhan Veli", "Üvercinka|Cemal Süreya", "Çile|Necip Fazıl Kısakürek;Necip Fazıl",
   "Kendi Gök Kubbemiz|Yahya Kemal Beyatlı;Yahya Kemal", "Piyale|Ahmet Haşim", "Rübab-ı Şikeste|Tevfik Fikret", "Vatan yahut Silistre|Namık Kemal", "Şair Evlenmesi|İbrahim Şinasi;Şinasi", "Hasretinden Prangalar Eskittim|Ahmed Arif",
-  "Ağır Roman|Metin Kacan", "Mutluluk|Zülfü Livaneli;Livaneli", "Ölmeye Yatmak|Adalet Ağaoğlu;Ağaoğlu", "Baba ve Piç|Elif Şafak;Şafak", "Patasana|Ahmet Ümit", "Kuyruklu Yıldız Altında Bir Izdivaç|Ahmet Mithat",
+  "Ağır Roman|Metin Kaçan", "Mutluluk|Zülfü Livaneli;Livaneli", "Ölmeye Yatmak|Adalet Ağaoğlu;Ağaoğlu", "Baba ve Piç|Elif Şafak;Şafak", "Patasana|Ahmet Ümit", "Kuyruklu Yıldız Altında Bir Izdivaç|Hüseyin Rahmi Gürpınar;Gürpınar",
 ];
 // yıl|ödül sahibi (Nobel Edebiyat)
 const NOBEL = ["1990|Octavio Paz;Paz", "1991|Nadine Gordimer;Gordimer", "1992|Derek Walcott;Walcott", "1993|Toni Morrison;Morrison", "1994|Kenzaburō Ōe;Kenzaburo Oe;Oe", "1995|Seamus Heaney;Heaney", "1996|Wisława Szymborska;Szymborska",
   "1997|Dario Fo", "1998|José Saramago;Saramago", "1999|Günter Grass;Grass", "2000|Gao Xingjian", "2001|V. S. Naipaul;Naipaul", "2002|Imre Kertész;Kertesz", "2003|J. M. Coetzee;Coetzee", "2004|Elfriede Jelinek;Jelinek", "2005|Harold Pinter;Pinter",
   "2006|Orhan Pamuk;Pamuk", "2007|Doris Lessing;Lessing", "2008|J. M. G. Le Clézio;Le Clezio", "2009|Herta Müller;Muller", "2010|Mario Vargas Llosa;Vargas Llosa", "2011|Tomas Tranströmer;Transtromer", "2012|Mo Yan", "2013|Alice Munro;Munro",
   "2014|Patrick Modiano;Modiano", "2015|Svetlana Aleksiyeviç;Aleksievich;Alexievich", "2016|Bob Dylan;Dylan", "2017|Kazuo Ishiguro;Ishiguro", "2018|Olga Tokarczuk;Tokarczuk", "2019|Peter Handke;Handke", "2020|Louise Glück;Gluck", "2021|Abdulrazak Gurnah;Gurnah",
-  "2022|Annie Ernaux;Ernaux", "2023|Jon Fosse;Fosse", "2024|Han Kang"];
+  "2022|Annie Ernaux;Ernaux", "2023|Jon Fosse;Fosse", "2024|Han Kang", "2025|László Krasznahorkai;Krasznahorkai"];
 // karakter|eser
 const CHARACTERS = ["Raskolnikov|Suç ve Ceza", "Anna Karenina (kahramanı)|Anna Karenina", "Heathcliff|Uğultulu Tepeler", "Jay Gatsby|Muhteşem Gatsby", "Winston Smith|1984", "Sancho Panza|Don Kişot", "Quasimodo|Notre Dame'ın Kamburu", "Jean Valjean|Sefiller",
   "Atticus Finch|Bülbülü Öldürmek", "Holden Caulfield|Çavdar Tarlasında Çocuklar", "Gregor Samsa|Dönüşüm", "Bilbo Baggins|Hobbit", "Elizabeth Bennet|Gurur ve Önyargı", "Robinson Crusoe (kahramanı)|Robinson Crusoe", "Ahab Kaptan|Moby Dick", "Pip|Büyük Umutlar",

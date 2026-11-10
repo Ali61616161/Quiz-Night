@@ -55,9 +55,9 @@ const CHARS = [
 const OSCAR = ["1993|Schindler'in Listesi", "1994|Forrest Gump", "1995|Braveheart (Cesur Yürek)", "1996|The English Patient (İngiliz Hasta)", "1997|Titanic", "1998|Shakespeare in Love (Aşık Shakespeare)", "1999|American Beauty (Amerikan Güzeli)", "2000|Gladyatör",
   "2001|A Beautiful Mind (Akıl Oyunları)", "2002|Chicago", "2003|Yüzüklerin Efendisi: Kralın Dönüşü", "2004|Million Dollar Baby", "2005|Crash", "2006|The Departed (Köstebek)", "2007|No Country for Old Men (Çocuklara Yer Yok)", "2008|Slumdog Millionaire (Milyoner)",
   "2009|The Hurt Locker (Savaş Alanı)", "2010|The King's Speech (Kral'ın Konuşması)", "2011|The Artist", "2012|Argo", "2013|12 Years a Slave (12 Yıllık Esaret)", "2014|Birdman", "2015|Spotlight", "2016|Moonlight", "2017|The Shape of Water (Suyun Sesi)",
-  "2018|Green Book", "2019|Parazit", "2020|Nomadland", "2021|CODA", "2022|Everything Everywhere All at Once", "2023|Oppenheimer"];
+  "2018|Green Book", "2019|Parazit", "2020|Nomadland", "2021|CODA", "2022|Everything Everywhere All at Once", "2023|Oppenheimer", "2024|Anora", "2025|One Battle After Another"];
 const PALME = ["2009|The White Ribbon (Beyaz Kurdele)", "2011|The Tree of Life (Hayat Ağacı)", "2013|Mavi En Sıcak Renktir", "2014|Kış Uykusu", "2016|I, Daniel Blake (Ben, Daniel Blake)", "2017|The Square (Kare)", "2018|Shoplifters (Hırsız Aile)", "2019|Parazit",
-  "2021|Titane", "2022|Triangle of Sadness (Hüzün Üçgeni)", "2023|Anatomy of a Fall (Bir Düşüşün Anatomisi)", "1994|Pulp Fiction", "2002|The Pianist (Piyanist)", "2004|Fahrenheit 9/11"];
+  "2021|Titane", "2022|Triangle of Sadness (Hüzün Üçgeni)", "2023|Anatomy of a Fall (Bir Düşüşün Anatomisi)", "2024|Anora", "2025|It Was Just an Accident", "1994|Pulp Fiction", "2002|The Pianist (Piyanist)", "2004|Fahrenheit 9/11"];
 
 export const DIZIFILM: FactSet[] = [
   { id: "film", cat: "Dizi/Film", sub: "Filmler", diff: 2, rows: FILMS, asks: [

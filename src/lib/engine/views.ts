@@ -1,43 +1,47 @@
 import { createHash } from "node:crypto";
 import { coach } from "./machine";
 import { isOnline, ranking } from "./game";
-import type { Game, Phase, Question } from "./types";
+import { localizeValue, type Lang } from "./scoring";
+import type { Game, Phase, Question, QuestionEn } from "./types";
 
 const REVEALED: Phase[] = ["answer_reveal", "scoreboard", "final"];
 
-/** Deterministik karıştırma: aynı soru her istemcide aynı sırada görünür, cevap sızmaz. */
-function shuffle<T>(arr: T[], seed: string): T[] {
-  const out = [...arr];
+/** Deterministik karıştırma: aynı soru her istemcide aynı sırada görünür, cevap sızmaz. Permütasyon döner (iki dilde aynı sıra). */
+function shuffleIdx(n: number, seed: string): number[] {
+  const idx = Array.from({ length: n }, (_, i) => i);
   const h = createHash("sha256").update(seed).digest();
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = h[i % h.length] % (i + 1);
-    [out[i], out[j]] = [out[j], out[i]];
-  }
+  for (let i = n - 1; i > 0; i--) { const j = h[i % h.length] % (i + 1); [idx[i], idx[j]] = [idx[j], idx[i]]; }
   // Karışım orijinalle aynıysa bir kaydır (sıralama sorusunda bedava cevap olmasın)
-  if (out.length > 1 && out.every((x, i) => x === arr[i])) out.push(out.shift()!);
-  return out;
+  if (n > 1 && idx.every((x, i) => x === i)) idx.push(idx.shift()!);
+  return idx;
 }
 
-function correctText(q: Question): string {
-  if (q.kind === "ordering") return q.items!.join(" → ");
-  if (q.kind === "matching") return q.pairs!.map((p) => `${p[0]} = ${p[1]}`).join(" · ");
-  return q.correct;
+function correctText(q: Question, L: QuestionEn | null): string {
+  const items = L?.items ?? q.items, pairs = L?.pairs ?? q.pairs;
+  if (q.kind === "ordering") return items!.join(" → ");
+  if (q.kind === "matching") return pairs!.map((p) => `${p[0]} = ${p[1]}`).join(" · ");
+  return L?.correct ?? q.correct;
 }
 
-function questionView(g: Game, forHost: boolean) {
+function questionView(g: Game, forHost: boolean, lang: Lang) {
   const q = g.questions[g.qIndex];
   if (!q || g.phase === "lobby") return null;
+  const L = lang === "en" && q.en ? q.en : null;
   const revealed = REVEALED.includes(g.phase) || forHost;
   const visible = g.phase !== "round_intro" || forHost;
+  const seed = `${g.id}:${q.id}`;
+  const itemsPerm = q.kind === "ordering" ? shuffleIdx(q.items!.length, seed) : [];
+  const rightPerm = q.kind === "matching" ? shuffleIdx(q.pairs!.length, seed) : [];
+  const items = L?.items ?? q.items, pairs = L?.pairs ?? q.pairs;
   return {
     index: g.qIndex, total: g.questions.length, category: q.category, kind: q.kind, round: q.round ?? "all",
     roundNo: q.roundNo ?? 1, roundLabel: q.roundLabel ?? "",
-    text: visible ? q.text : null, image: visible ? q.image ?? null : null,
-    options: visible && q.kind === "choice" ? q.options ?? null : null,
-    items: visible && q.kind === "ordering" ? shuffle(q.items!, `${g.id}:${q.id}`) : null,
-    left: visible && q.kind === "matching" ? q.pairs!.map((p) => p[0]) : null,
-    right: visible && q.kind === "matching" ? shuffle(q.pairs!.map((p) => p[1]), `${g.id}:${q.id}`) : null,
-    ...(revealed ? { correct: correctText(q), explanation: q.explanation ?? null } : {}),
+    text: visible ? L?.text ?? q.text : null, image: visible ? q.image ?? null : null,
+    options: visible && q.kind === "choice" ? L?.options ?? q.options ?? null : null,
+    items: visible && q.kind === "ordering" ? itemsPerm.map((i) => items![i]) : null,
+    left: visible && q.kind === "matching" ? pairs!.map((p) => p[0]) : null,
+    right: visible && q.kind === "matching" ? rightPerm.map((i) => pairs![i][1]) : null,
+    ...(revealed ? { correct: correctText(q, L), explanation: L?.explanation ?? q.explanation ?? null } : {}),
   };
 }
 
@@ -50,19 +54,21 @@ function board(g: Game, now: number) {
   }));
 }
 
-function base(g: Game, now: number) {
+function base(g: Game, now: number, lang: Lang) {
   return {
     serverNow: now, version: g.version, code: g.code, venueName: g.venueName, phase: g.phase, mode: g.mode,
     openedAt: g.openedAt, deadline: g.deadline, durationMs: g.settings.durationMs,
     lang: g.lang, brand: g.brand, watermark: g.plan === "free", paused: g.paused,
-    question: questionView(g, false), teams: board(g, now),
+    question: questionView(g, false, lang), teams: board(g, now),
   };
 }
 
-export const tvView = (g: Game, now: number) => base(g, now);
+export const tvView = (g: Game, now: number, lang: Lang = "tr") => base(g, now, lang);
 
-export function playerView(g: Game, memberToken: string | null, now: number) {
-  const b = base(g, now);
+export function playerView(g: Game, memberToken: string | null, now: number, lang: Lang = "tr") {
+  const b = base(g, now, lang);
+  const cq = g.questions[g.qIndex];
+  const loc = (v: string) => (cq ? localizeValue(cq, v, lang) : v);
   let me = null;
   if (memberToken) {
     for (const team of g.teams) {
@@ -78,13 +84,13 @@ export function playerView(g: Game, memberToken: string | null, now: number) {
         isCaptain, captainName: captain.nickname, captainOnline: isOnline(captain, now),
         canClaim: !isCaptain && !isOnline(captain, now),
         members: team.members.map((m) => ({ id: m.id, nickname: m.nickname, online: isOnline(m, now), captain: m.id === team.captainId })),
-        answer: ans ? { value: ans.value, locked: ans.locked } : null,
+        answer: ans ? { value: loc(ans.value), locked: ans.locked } : null,
         // Takım arkadaşlarının önerileri yalnızca kaptan modunda ve kaptana görünür; çoğunluk modunda oy dağılımı
         suggestions: g.mode === "captain" ? Object.entries(sugg).map(([memberId, s]) => ({
-          memberId, value: s.value, nickname: team.members.find((m) => m.id === memberId)?.nickname ?? "",
+          memberId, value: loc(s.value), nickname: team.members.find((m) => m.id === memberId)?.nickname ?? "",
         })) : [],
-        votes: g.mode === "majority" ? Object.values(sugg).reduce<Record<string, number>>((a, s) => { a[s.value] = (a[s.value] ?? 0) + 1; return a; }, {}) : {},
-        mySuggestion: own,
+        votes: g.mode === "majority" ? Object.values(sugg).reduce<Record<string, number>>((a, s) => { a[loc(s.value)] = (a[loc(s.value)] ?? 0) + 1; return a; }, {}) : {},
+        mySuggestion: own === null ? null : loc(own),
         wager: g.wagers[team.id] ?? null, wagerMax: Math.max(team.score, 50),
         jokerAvailable: !g.jokersUsed.includes(team.id), jokerActive: Boolean(g.jokerActive[team.id]),
         result: REVEALED.includes(g.phase) ? g.results[team.id] ?? null : null,
@@ -96,12 +102,12 @@ export function playerView(g: Game, memberToken: string | null, now: number) {
   return { ...b, me };
 }
 
-export function hostView(g: Game, now: number, extra: { otherHostActive?: boolean; poolLow?: boolean } = {}) {
+export function hostView(g: Game, now: number, extra: { otherHostActive?: boolean; poolLow?: boolean } = {}, lang: Lang = "tr") {
   const q = g.questions[g.qIndex];
   const isWager = q?.round === "wager" || q?.round === "final";
   return {
-    ...base(g, now),
-    question: questionView(g, true),
+    ...base(g, now, lang),
+    question: questionView(g, true, lang),
     id: g.id, tvToken: g.tvToken, settings: g.settings, allowedModes: g.allowedModes, autoHost: g.autoHost,
     coach: coach(g.phase, g.teams.length, isWager), voided: g.voided, ...extra,
     teamDetails: g.teams.map((t) => ({
@@ -111,7 +117,7 @@ export function hostView(g: Game, now: number, extra: { otherHostActive?: boolea
       answered: Boolean(g.answers[t.id]) || Object.keys(g.suggestions[t.id] ?? {}).length > 0,
       locked: Boolean(g.answers[t.id]?.locked),
       wager: g.wagers[t.id] ?? null, joker: Boolean(g.jokerActive[t.id]),
-      answerValue: g.phase === "question_open" ? null : g.answers[t.id]?.value ?? null,
+      answerValue: g.phase === "question_open" ? null : g.answers[t.id] ? (q ? localizeValue(q, g.answers[t.id].value, lang) : g.answers[t.id].value) : null,
       result: g.results[t.id] ?? null,
       override: t.id in g.overrides ? g.overrides[t.id] : null,
     })),

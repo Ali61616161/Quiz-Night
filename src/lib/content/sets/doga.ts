@@ -7,7 +7,7 @@ const DIET = ["Aslan|Etçil", "Kaplan|Etçil", "Çita|Etçil", "Leopar|Etçil", 
 // anne hayvan|yavru adı
 const YOUNG = ["İnek|Buzağı", "Koyun|Kuzu", "Keçi|Oğlak", "At (kısrak)|Tay", "Eşek|Sıpa", "Tavuk|Civciv", "Kurbağa|İribaş", "Kelebek|Tırtıl (larva)", "Köpek|Köpek yavrusu (enik)"];
 // hayvan|ses
-const SOUND = ["Köpek|Havlar", "Kedi|Miyavlar", "İnek|Böğürür", "Koyun|Meler", "At|Kişner", "Horoz|Öter", "Eşek|Anırır", "Aslan|Kükrer", "Kurt|Uluyan", "Kurbağa|Vıraklar", "Arı|Vızıldar", "Yılan|Tıslar", "Ördek|Vaklar", "Tavuk|Gıdaklar", "Karga|Gaklar", "Güvercin|Guruldar", "Hindi|Gulu gulu der"];
+const SOUND = ["Köpek|Havlar", "Kedi|Miyavlar", "İnek|Böğürür", "Koyun|Meler", "At|Kişner", "Horoz|Öter", "Eşek|Anırır", "Aslan|Kükrer", "Yılan|Tısıldar", "Kurbağa|Vıraklar", "Arı|Vızıldar", "Yılan|Tıslar", "Ördek|Vaklar", "Tavuk|Gıdaklar", "Karga|Gaklar", "Güvercin|Guruldar", "Hindi|Gulu gulu der"];
 // ülke|ulusal/simge hayvan
 const NATIONAL = ["ABD|Kel kartal", "Avustralya|Kanguru", "Çin|Dev panda", "Hindistan|Bengal kaplanı", "Rusya|Kahverengi ayı", "Kanada|Kunduz", "İskoçya|Tek boynuzlu at (unicorn)", "Yeni Zelanda|Kivi", "Güney Afrika|Springbok", "Meksika|Altın kartal"];
 // milli park/yer|ülke

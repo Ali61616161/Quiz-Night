@@ -8,7 +8,8 @@ export function useGameStream<T extends { serverNow: number }>(gameId: string | 
   const offset = useRef(0); // sunucu - istemci
   useEffect(() => {
     if (!gameId || !token) return;
-    const es = new EventSource(`/api/games/${gameId}/events?role=${role}&token=${encodeURIComponent(token)}${extra}`);
+    let lang = "tr"; try { lang = localStorage.getItem("lang") === "en" ? "en" : "tr"; } catch {}
+    const es = new EventSource(`/api/games/${gameId}/events?role=${role}&token=${encodeURIComponent(token)}&lang=${lang}${extra}`);
     es.onopen = () => setConnected(true);
     es.onerror = () => setConnected(false);
     es.onmessage = (e) => {

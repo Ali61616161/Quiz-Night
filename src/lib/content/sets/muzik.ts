@@ -4,7 +4,7 @@ const EUROVISION = ["1956|İsviçre", "1957|Hollanda", "1958|Fransa", "1959|Holl
   "1970|İrlanda", "1971|Monako", "1972|Lüksemburg", "1973|Lüksemburg", "1974|İsveç", "1975|Hollanda", "1976|Birleşik Krallık", "1977|Fransa", "1978|İsrail", "1979|İsrail", "1980|İrlanda", "1981|Birleşik Krallık", "1982|Almanya", "1983|Lüksemburg",
   "1984|İsveç", "1985|Norveç", "1986|Belçika", "1987|İrlanda", "1988|İsviçre", "1989|Yugoslavya", "1990|İtalya", "1991|İsveç", "1992|İrlanda", "1993|İrlanda", "1994|İrlanda", "1995|Norveç", "1996|İrlanda", "1997|Birleşik Krallık", "1998|İsrail",
   "1999|İsveç", "2000|Danimarka", "2001|Estonya", "2002|Letonya", "2003|Türkiye", "2004|Ukrayna", "2005|Yunanistan", "2006|Finlandiya", "2007|Sırbistan", "2008|Rusya", "2009|Norveç", "2010|Almanya", "2011|Azerbaycan", "2012|İsveç", "2013|Danimarka",
-  "2014|Avusturya", "2015|İsveç", "2016|Ukrayna", "2017|Portekiz", "2018|İsrail", "2019|Hollanda", "2021|İtalya", "2022|Ukrayna", "2023|İsveç", "2024|İsviçre"];
+  "2014|Avusturya", "2015|İsveç", "2016|Ukrayna", "2017|Portekiz", "2018|İsrail", "2019|Hollanda", "2021|İtalya", "2022|Ukrayna", "2023|İsveç", "2024|İsviçre", "2025|Avusturya", "2026|Bulgaristan"];
 // şarkı|sanatçı
 const SONGS = [
   "Bohemian Rhapsody|Queen", "We Will Rock You|Queen", "Another One Bites the Dust|Queen", "Don't Stop Me Now|Queen", "Thriller|Michael Jackson", "Billie Jean|Michael Jackson", "Beat It|Michael Jackson", "Smooth Criminal|Michael Jackson",

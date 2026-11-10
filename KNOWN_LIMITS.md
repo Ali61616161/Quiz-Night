@@ -29,6 +29,6 @@
 - "Güncel" kategorisi yoktur (bilgi hızla eskir). Seçim sonuçları, 2024 sonrası spor/ödül sonuçları havuzda yoktur.
 - Gerçek cihaz (eski akıllı TV tarayıcısı, iOS Safari) testi yapılmadı; yalnızca Chromium.
 
-- "Gündem" konusu 2000–2025 arasıdır; 2026 olayları (ör. 2026 Dünya Kupası sonucu) bilinmediği için yoktur. Güncel bilgi her yıl elle/AI ile yenilenmelidir.
+- "Gündem" konusu 2000–2026 (Kasım 2026) arasıdır; 2026 satırları internetten iki kaynakla teyit edilmiştir, ancak son aylardaki olaylar için her yıl gözden geçirin. 2026 Nobel sonuçları ve belirsiz haberler bilerek eklenmemiştir.
 - Marka planında "mekan görseli" arka planı hâlâ yok.
 - Resim turu için havuzda görsel soru yok.

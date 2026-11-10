@@ -10,6 +10,9 @@ export type QuestionKind = "open" | "choice" | "ordering" | "matching" | "estima
 export type RoundType = "all" | "speed" | "wager" | "final";
 export type TeamMode = "captain" | "majority" | "individual";
 
+/** Sorunun İngilizce karşılığı. Dizi alanları (options/items/pairs) Türkçe ile aynı sıradadır. */
+export interface QuestionEn { text: string; options?: string[]; items?: string[]; pairs?: [string, string][]; correct: string; accepted?: string[]; explanation?: string }
+
 export interface Question {
   id: string;
   category: string;
@@ -31,6 +34,7 @@ export interface Question {
   sourceNote?: string;
   status?: "draft" | "approved" | "archived";
   reports?: number;
+  en?: QuestionEn;
   // Oyun içi yerleşim
   round?: RoundType;
   roundNo?: number;

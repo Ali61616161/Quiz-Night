@@ -32,7 +32,7 @@ const GROUP = ["Mercimek çorbası|Çorba", "Ezogelin çorbası|Çorba", "Tarhan
   "Ayran|İçecek", "Şalgam|İçecek", "Boza|İçecek", "Salep|İçecek", "Limonata|İçecek", "Türk kahvesi|İçecek", "Zeytinyağlı taze fasulye|Zeytinyağlı yemek", "İmam bayıldı|Zeytinyağlı yemek", "Zeytinyağlı yaprak sarma|Zeytinyağlı yemek", "Cacık|Meze", "Haydari|Meze",
   "Muhammara|Meze", "Acılı ezme|Meze", "Çoban salatası|Salata", "Gavurdağı salatası|Salata", "Kısır|Salata", "Mevsim salatası|Salata"];
 // besin|anavatan
-const ORIGIN = ["Domates|Güney Amerika", "Patates|Güney Amerika", "Mısır|Orta Amerika", "Kahve|Etiyopya", "Kakao|Orta ve Güney Amerika", "Çay|Çin", "Muz|Güneydoğu Asya", "Biber (kapya/dolma biberi)|Orta ve Güney Amerika", "Pirinç|Asya", "Buğday|Orta Doğu (Bereketli Hilal)", "Zeytin|Akdeniz havzası"];
+const ORIGIN = ["Patates|Güney Amerika", "Mısır|Orta Amerika", "Kahve|Etiyopya", "Çay|Çin", "Muz|Güneydoğu Asya", "Biber (kapya/dolma biberi)|Orta ve Güney Amerika", "Pirinç|Asya", "Buğday|Orta Doğu (Bereketli Hilal)", "Zeytin|Akdeniz havzası"];
 
 export const YEMEK: FactSet[] = [
   { id: "yemekgrup", cat: "Yemek", sub: "Yemek grupları", diff: 1, rows: GROUP, asks: [{ t: "{0} hangi yemek grubunda yer alır?", a: 1, by: [0], choice: true }] },

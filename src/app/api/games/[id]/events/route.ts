@@ -13,6 +13,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const role = url.searchParams.get("role");
   const token = url.searchParams.get("token") ?? "";
   const device = (url.searchParams.get("device") ?? "d").slice(0, 24);
+  const lang = url.searchParams.get("lang") === "en" ? "en" : "tr";
   const game = getGame(id);
   if (!game) return new Response("not found", { status: 404 });
   if (role === "host" && !eq(token, game.hostToken)) return new Response("forbidden", { status: 403 });
@@ -32,9 +33,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
         let view: unknown;
         if (role === "host") {
           const hd = hostDevice(id, device, PLANS[game.plan].hostDevices, now);
-          view = { ...hostView(game, now, { otherHostActive: hd.others }), kicked: hd.kicked };
-        } else if (role === "tv") view = tvView(game, now);
-        else { try { heartbeat(game, token, now); } catch { /* üye silinmiş olabilir */ } view = playerView(game, token, now); }
+          view = { ...hostView(game, now, { otherHostActive: hd.others }, lang), kicked: hd.kicked };
+        } else if (role === "tv") view = tvView(game, now, lang);
+        else { try { heartbeat(game, token, now); } catch { /* üye silinmiş olabilir */ } view = playerView(game, token, now, lang); }
         try { controller.enqueue(enc.encode(`data: ${JSON.stringify(view)}\n\n`)); } catch { closed = true; }
       };
       send();

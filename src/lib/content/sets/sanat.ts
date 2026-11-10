@@ -18,7 +18,7 @@ const PAINTERS = [
   "Eugène Delacroix;Delacroix|Romantizm|Fransa", "Gustave Courbet;Courbet|Gerçekçilik (Realizm)|Fransa", "Paul Cézanne;Cézanne;Cezanne|Post-izlenimcilik|Fransa", "Georges Seurat;Seurat|Noktacılık (Pointilizm)|Fransa", "René Magritte;Magritte|Gerçeküstücülük (Sürrealizm)|Belçika",
   "Jackson Pollock;Pollock|Soyut dışavurumculuk|ABD", "Marcel Duchamp;Duchamp|Dadaizm|Fransa", "Rembrandt|Barok|Hollanda", "Francisco Goya;Goya|Romantizm|İspanya", "Sandro Botticelli;Botticelli|Erken Rönesans|İtalya", "Leonardo da Vinci;Da Vinci|Yüksek Rönesans|İtalya",
   "Johannes Vermeer;Vermeer|Barok|Hollanda", "Diego Velázquez;Velazquez|Barok|İspanya", "Gustav Klimt;Klimt|Art Nouveau (Sezesyon)|Avusturya", "Henri Matisse;Matisse|Fovizm|Fransa", "Pierre-Auguste Renoir;Renoir|İzlenimcilik|Fransa", "Edgar Degas;Degas|İzlenimcilik|Fransa",
-  "Frida Kahlo;Kahlo|Gerçeküstücü etkili Meksika sanatı|Meksika", "Katsushika Hokusai;Hokusai|Ukiyo-e|Japonya", "Osman Hamdi Bey|Oryantalizm|Türkiye", "Fikret Mualla;Mualla|Ekspresyonizm|Türkiye", "Bedri Rahmi Eyüboğlu;Eyüboğlu|Modern Türk resmi|Türkiye",
+  "Frida Kahlo;Kahlo|Gerçeküstücü etkili Meksika sanatı|Meksika", "Katsushika Hokusai;Hokusai|Ukiyo-e|Japonya", "Osman Hamdi Bey|Oryantalizm|Türkiye", "Fikret Mualla;Mualla|Ekspresyonist resim (Paris okulu)|Türkiye", "Bedri Rahmi Eyüboğlu;Eyüboğlu|Modern Türk resmi|Türkiye",
 ];
 // müze|şehir
 const MUSEUMS = [
@@ -42,7 +42,7 @@ const BIRTH = ["Leonardo da Vinci;Da Vinci|1452", "Michelangelo|1475", "Raffaell
   "Katsushika Hokusai;Hokusai|1760", "Auguste Rodin;Rodin|1840", "Antoni Gaudí;Gaudi|1852", "Eugène Delacroix;Delacroix|1798", "Gustave Courbet;Courbet|1819", "Georges Seurat;Seurat|1859", "Marcel Duchamp;Duchamp|1887", "Le Corbusier|1887"];
 // sanat dalı|usta
 const CRAFT = ["Ebru|Su yüzeyinde boyayla desen oluşturma", "Hat|Güzel yazı sanatı", "Tezhip|Kitap süsleme sanatı (altınla)", "Minyatür|Küçük boyutlu resim sanatı", "Çini|Pişmiş toprak üzerine renkli sır süslemesi", "Kilim|Düz dokuma halı", "Karagöz|Gölge oyunu", "Meddah|Tek kişilik taklit ve hikâye anlatma sanatı",
-  "Ortaoyunu|Meydanda oynanan geleneksel Türk tiyatrosu", "Kaligrafi|Güzel yazı sanatı (hat)", "Mozaik|Küçük taş parçalarıyla yapılan yüzey süsleme", "Fresk|Islak sıva üzerine duvar resmi", "Vitray|Renkli camlarla yapılan süsleme", "Seramik|Pişmiş çamurdan yapılan eşyalar sanatı",
+  "Ortaoyunu|Meydanda oynanan geleneksel Türk tiyatrosu", "Mozaik|Küçük taş parçalarıyla yapılan yüzey süsleme", "Fresk|Islak sıva üzerine duvar resmi", "Vitray|Renkli camlarla yapılan süsleme", "Seramik|Pişmiş çamurdan yapılan eşyalar sanatı",
   "Origami|Kâğıt katlama sanatı (Japon)", "Bonsai|Ağaçları minyatür biçimde yetiştirme sanatı (Japon)", "Rölyef|Yüzeyden kabartma olarak çıkan heykel tekniği", "Karikatür|Mizahi çizgi sanatı", "Kolaj|Parçaların yapıştırılmasıyla oluşan eser"];
 
 export const SANAT: FactSet[] = [

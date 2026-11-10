@@ -105,13 +105,13 @@ describe("olgu tabloları: kendi içinde çelişki taraması", () => {
   });
   it("turnuva serileri kesintisiz ve doğru aralıkta", () => {
     const wc = rows(FUTBOL, "dk").map((x) => Number(x[0]));
-    expect(wc).toEqual([1930, 1934, 1938, 1950, 1954, 1958, 1962, 1966, 1970, 1974, 1978, 1982, 1986, 1990, 1994, 1998, 2002, 2006, 2010, 2014, 2018, 2022]);
-    const cl = rows(FUTBOL, "cl").map((x) => Number(x[0])); expect(cl).toEqual(Array.from({ length: 69 }, (_, i) => 1956 + i));
-    const bd = rows(FUTBOL, "bd").map((x) => Number(x[0])); expect(bd).toEqual(Array.from({ length: 69 }, (_, i) => 1956 + i).filter((y) => y !== 2020));
+    expect(wc).toEqual([1930, 1934, 1938, 1950, 1954, 1958, 1962, 1966, 1970, 1974, 1978, 1982, 1986, 1990, 1994, 1998, 2002, 2006, 2010, 2014, 2018, 2022, 2026]);
+    const cl = rows(FUTBOL, "cl").map((x) => Number(x[0])); expect(cl).toEqual(Array.from({ length: 71 }, (_, i) => 1956 + i));
+    const bd = rows(FUTBOL, "bd").map((x) => Number(x[0])); expect(bd).toEqual(Array.from({ length: 70 }, (_, i) => 1956 + i).filter((y) => y !== 2020));
     const eu = rows(FUTBOL, "euro").map((x) => Number(x[0])); expect(eu).toEqual(Array.from({ length: 17 }, (_, i) => 1960 + i * 4));
-    const f1 = rows(SPOR, "f1").map((x) => Number(x[0])); expect(f1).toEqual(Array.from({ length: 75 }, (_, i) => 1950 + i));
+    const f1 = rows(SPOR, "f1").map((x) => Number(x[0])); expect(f1).toEqual(Array.from({ length: 76 }, (_, i) => 1950 + i));
     const su = rows(SPOR, "oy").map((x) => Number(x[0])); for (const y of su) expect(y % 4).toBe(0); expect(su).not.toContain(1916); expect(su).not.toContain(1940); expect(su).not.toContain(1944);
-    const ev = rows(MUZIK, "eurovision").map((x) => Number(x[0])); expect(ev).not.toContain(1969); expect(ev).not.toContain(2020); expect(ev[0]).toBe(1956); expect(ev.at(-1)).toBe(2024);
+    const ev = rows(MUZIK, "eurovision").map((x) => Number(x[0])); expect(ev).not.toContain(1969); expect(ev).not.toContain(2020); expect(ev[0]).toBe(1956); expect(ev.at(-1)).toBe(2026);
   });
   it("bilinen sabit olgular: seçilmiş kontrol listesi", () => {
     const f = (sets: { id: string; rows: string[] }[], id: string, key: string, col: number) => rows(sets, id).find((x) => x[0].split(";")[0] === key)![col].split(";")[0];
@@ -168,22 +168,25 @@ describe("gece kurma: karışık, konu ve tekrar yok", () => {
   });
 });
 
-import { BANK_EN } from "@/lib/content/bank";
 import { hasTurkish } from "@/lib/content/en";
-describe("İngilizce soru havuzu", () => {
-  it("en az 2000 soru, Türkçe karakter/sözcük içermez, kimlik ve metin benzersiz", () => {
-    expect(BANK_EN.length).toBeGreaterThanOrEqual(2000);
-    expect(new Set(BANK_EN.map((q) => q.id)).size).toBe(BANK_EN.length);
-    expect(new Set(BANK_EN.map((q) => q.text.toLowerCase())).size).toBe(BANK_EN.length);
-    for (const q of BANK_EN) { expect(hasTurkish(q.text) || hasTurkish(q.correct) || (q.options ?? []).some(hasTurkish), q.text).toBe(false); }
+describe("İki dilli tek havuz (1:1 İngilizce)", () => {
+  const bad = BANK.filter((q) => {
+    const e = q.en; if (!e) return true;
+    if (hasTurkish(e.text) || hasTurkish(e.correct)) return true;
+    if (q.options && (!e.options || e.options.length !== q.options.length || e.options.some(hasTurkish))) return true;
+    if (q.items && (!e.items || e.items.length !== q.items.length || e.items.some(hasTurkish))) return true;
+    if (q.pairs && (!e.pairs || e.pairs.length !== q.pairs.length)) return true;
+    return false;
   });
-  it("çoktan seçmeli şıklar geçerli, doğru cevap tek", () => {
-    for (const q of BANK_EN.filter((x) => x.kind === "choice")) { expect(q.options).toHaveLength(4); expect(new Set(q.options).size).toBe(4); expect(q.options).toContain(q.correct); expect(validateAnswer(q, q.correct)).toBe(true); }
+  it("her soru birebir İngilizce karşılığa sahip, Türkçe sızıntısı yok", () => {
+    if (bad.length) console.log(`EN eksik: ${bad.length}/${BANK.length}`, bad.slice(0, 15).map((q) => q.text));
+    expect(bad.length).toBe(0);
   });
-  it("İngilizce gece İngilizce soru getirir", () => {
-    const n = buildNight({ template: "classic", seen: new Set(), allowed: ALL as never, seed: "en1", lang: "en" });
-    expect(n.questions.length).toBeGreaterThanOrEqual(30);
-    for (const q of n.questions) expect(hasTurkish(q.text), q.text).toBe(false);
+  it("İngilizce şıklar Türkçe şıklarla aynı sırada ve doğru cevap şıkların içinde", () => {
+    for (const q of BANK.filter((x) => x.kind === "choice" && x.en)) {
+      expect(q.en!.options!.length).toBe(4);
+      expect(q.en!.options![q.options!.indexOf(q.correct)]).toBe(q.en!.correct);
+    }
   });
 });
 

@@ -3,6 +3,26 @@ import type { Game, Question } from "./types";
 
 const tryJson = (s: string): unknown => { try { return JSON.parse(s); } catch { return null; } };
 
+export type Lang = "tr" | "en";
+const tryArr = (s: string): string[] | null => { try { const a = JSON.parse(s); return Array.isArray(a) && a.every((x) => typeof x === "string") ? a : null; } catch { return null; } };
+
+/** İstemcinin gösterdiği (İngilizce olabilir) cevabı Türkçe kanonik biçime çevirir. */
+export function canonAnswer(q: Question, value: string): string {
+  const e = q.en; if (!e) return value;
+  if (q.kind === "choice" && e.options) { const i = e.options.indexOf(value); return i >= 0 ? q.options![i] : value; }
+  if (q.kind === "ordering" && e.items) { const a = tryArr(value); if (a) { const m = a.map((x) => { const i = e.items!.indexOf(x); return i >= 0 ? q.items![i] : x; }); return JSON.stringify(m); } }
+  if (q.kind === "matching" && e.pairs) { const a = tryArr(value); if (a) { const rights = e.pairs.map((p) => p[1]); return JSON.stringify(a.map((x) => { const i = rights.indexOf(x); return i >= 0 ? q.pairs![i][1] : x; })); } }
+  return value;
+}
+/** Kanonik (Türkçe) cevabı gösterim diline çevirir. */
+export function localizeValue(q: Question, value: string, lang: Lang): string {
+  const e = q.en; if (lang !== "en" || !e) return value;
+  if (q.kind === "choice" && e.options) { const i = q.options!.indexOf(value); return i >= 0 ? e.options[i] : value; }
+  if (q.kind === "ordering" && e.items) { const a = tryArr(value); if (a) return JSON.stringify(a.map((x) => { const i = q.items!.indexOf(x); return i >= 0 ? e.items![i] : x; })); }
+  if (q.kind === "matching" && e.pairs) { const a = tryArr(value); if (a) { return JSON.stringify(a.map((x) => { const i = q.pairs!.findIndex((p) => p[1] === x); return i >= 0 ? e.pairs![i][1] : x; })); } }
+  return value;
+}
+
 /** Cevap biçimini doğrular. Geçerliyse true. */
 export function validateAnswer(q: Question, value: string): boolean {
   if (!value || value.length > 600) return false;
@@ -29,7 +49,7 @@ export function parseNum(v: string): number {
 export function isAnswerCorrect(q: Question, value: string): boolean {
   switch (q.kind) {
     case "choice": return value === q.correct;
-    case "open": return isCorrectOpen(value, [q.correct, ...q.accepted]);
+    case "open": return isCorrectOpen(value, [q.correct, ...q.accepted, ...(q.en ? [q.en.correct, ...(q.en.accepted ?? [])] : [])]);
     case "estimate": return parseNum(value) === parseNum(q.correct);
     case "ordering": return value === JSON.stringify(q.items);
     case "matching": return value === JSON.stringify(q.pairs!.map((p) => p[1]));

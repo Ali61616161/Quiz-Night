@@ -2,7 +2,7 @@ import { randomBytes, randomInt } from "node:crypto";
 import type { PlanId } from "@config/plans";
 import { PLANS } from "@config/plans";
 import { nextPhase } from "./machine";
-import { resolveVotes, scoreQuestion, validateAnswer } from "./scoring";
+import { canonAnswer, resolveVotes, scoreQuestion, validateAnswer } from "./scoring";
 import { TEAM_COLORS, TEAM_EMOJIS } from "./types";
 import type { Brand, Game, Member, Question, Settings, Team, TeamMode } from "./types";
 
@@ -132,21 +132,24 @@ export function handOverCaptain(g: Game, memberToken: string, toMemberId: string
 }
 
 /** Öneri (kaptan modu), oy (çoğunluk) ya da kendi cevabı (bireysel). */
-export function suggest(g: Game, memberToken: string, value: string, now = Date.now()) {
+export function suggest(g: Game, memberToken: string, rawValue: string, now = Date.now()) {
   const { team, member } = requireMember(g, memberToken);
   if (g.phase !== "question_open" || (g.deadline !== null && now > g.deadline)) throw new GameError("closed", "Soru açık değil.", 409);
   const q = curQ(g);
+  const value = canonAnswer(q, rawValue);
   if (!validateAnswer(q, value)) throw new GameError("invalid", "Geçersiz cevap.");
   (g.suggestions[team.id] ??= {})[member.id] = { value, at: now };
   bump(g);
 }
 
-export function submitAnswer(g: Game, p: { memberToken: string; value: string; lock: boolean; now: number }) {
+export function submitAnswer(g: Game, p0: { memberToken: string; value: string; lock: boolean; now: number }) {
+  const p = { ...p0 };
   const { team, member } = requireMember(g, p.memberToken);
   if (g.phase !== "question_open" || (g.deadline !== null && p.now > g.deadline)) throw new GameError("closed", "Süre doldu.", 409);
   if (g.mode !== "captain") throw new GameError("mode", "Bu turda cevap öneri/oy ile verilir.", 409);
   if (team.captainId !== member.id) throw new GameError("not_captain", "Cevabı sadece kaptan gönderir.", 403);
   const q = curQ(g);
+  p.value = canonAnswer(q, p.value);
   if (!validateAnswer(q, p.value)) throw new GameError("invalid", "Geçersiz cevap.");
   const prev = g.answers[team.id];
   if (prev?.locked) throw new GameError("locked", "Cevap kilitlendi, değişiklik yapılamaz.", 409);

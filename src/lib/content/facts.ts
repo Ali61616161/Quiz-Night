@@ -1,5 +1,5 @@
 /** Sıralama ve tahmin soruları (elle yazılmış). Olgu tabloları sets/ altındadır. */
-export interface OrderingFact { cat: string; text: string; items: string[]; diff: 1 | 2 | 3; explain?: string }
+export interface OrderingFact { cat: string; text: string; items: string[]; diff: 1 | 2 | 3; explain?: string; textEn?: string; itemsEn?: string[] }
 export const ORDERINGS: OrderingFact[] = [
   { cat: "Bilim", text: "Gezegenleri Güneş'e en yakından en uzağa doğru sırala.", items: ["Merkür", "Venüs", "Dünya", "Mars"], diff: 1 },
   { cat: "Tarih", text: "Olayları eskiden yeniye sırala.", items: ["Malazgirt Savaşı", "İstanbul'un fethi", "Cumhuriyetin ilanı", "Ay'a ilk iniş"], diff: 1 },
@@ -19,7 +19,7 @@ export const ORDERINGS: OrderingFact[] = [
 ];
 
 /** Tahmin soruları: en yakın tahmin kazanır. */
-export interface EstimateFact { cat: string; text: string; answer: number; unit?: string; diff: 1 | 2 | 3; explain?: string }
+export interface EstimateFact { cat: string; text: string; answer: number; unit?: string; diff: 1 | 2 | 3; explain?: string; textEn?: string }
 export const ESTIMATES: EstimateFact[] = [
   { cat: "Bilim", text: "Işığın boşluktaki hızı yaklaşık kaç km/sn'dir?", answer: 299792, diff: 2, explain: "Yaklaşık 299.792 km/sn." },
   { cat: "Coğrafya", text: "Everest Dağı'nın yüksekliği yaklaşık kaç metredir?", answer: 8849, diff: 2 },

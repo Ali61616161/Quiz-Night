@@ -5,7 +5,7 @@ const WC = [
   "1930|Uruguay|Arjantin|Uruguay", "1934|İtalya|Çekoslovakya|İtalya", "1938|İtalya|Macaristan|Fransa", "1950|Uruguay|Brezilya|Brezilya", "1954|Batı Almanya;Almanya|Macaristan|İsviçre",
   "1958|Brezilya|İsveç|İsveç", "1962|Brezilya|Çekoslovakya|Şili", "1966|İngiltere|Batı Almanya;Almanya|İngiltere", "1970|Brezilya|İtalya|Meksika", "1974|Batı Almanya;Almanya|Hollanda|Batı Almanya;Almanya",
   "1978|Arjantin|Hollanda|Arjantin", "1982|İtalya|Batı Almanya;Almanya|İspanya", "1986|Arjantin|Batı Almanya;Almanya|Meksika", "1990|Batı Almanya;Almanya|Arjantin|İtalya", "1994|Brezilya|İtalya|ABD;Amerika Birleşik Devletleri",
-  "1998|Fransa|Brezilya|Fransa", "2002|Brezilya|Almanya|-", "2006|İtalya|Fransa|Almanya", "2010|İspanya|Hollanda|Güney Afrika", "2014|Almanya;Batı Almanya|Arjantin|Brezilya", "2018|Fransa|Hırvatistan|Rusya", "2022|Arjantin|Fransa|Katar",
+  "1998|Fransa|Brezilya|Fransa", "2002|Brezilya|Almanya|-", "2006|İtalya|Fransa|Almanya", "2010|İspanya|Hollanda|Güney Afrika", "2014|Almanya;Batı Almanya|Arjantin|Brezilya", "2018|Fransa|Hırvatistan|Rusya", "2022|Arjantin|Fransa|Katar", "2026|İspanya|Arjantin|-",
 ];
 const EURO = ["1960|Sovyetler Birliği;SSCB", "1964|İspanya", "1968|İtalya", "1972|Batı Almanya;Almanya", "1976|Çekoslovakya", "1980|Batı Almanya;Almanya", "1984|Fransa", "1988|Hollanda", "1992|Danimarka", "1996|Almanya;Batı Almanya", "2000|Fransa",
   "2004|Yunanistan", "2008|İspanya", "2012|İspanya", "2016|Portekiz", "2020|İtalya", "2024|İspanya"];
@@ -15,7 +15,7 @@ const CL = ["1956|Real Madrid", "1957|Real Madrid", "1958|Real Madrid", "1959|Re
   "1988|PSV Eindhoven;PSV", "1989|Milan;AC Milan", "1990|Milan;AC Milan", "1991|Kızılyıldız;Crvena Zvezda;Red Star Belgrad", "1992|Barcelona", "1993|Olympique Marsilya;Marsilya;Marseille", "1994|Milan;AC Milan", "1995|Ajax", "1996|Juventus",
   "1997|Borussia Dortmund;Dortmund", "1998|Real Madrid", "1999|Manchester United", "2000|Real Madrid", "2001|Bayern Münih;Bayern Munich", "2002|Real Madrid", "2003|Milan;AC Milan", "2004|Porto", "2005|Liverpool", "2006|Barcelona", "2007|Milan;AC Milan",
   "2008|Manchester United", "2009|Barcelona", "2010|Inter;Internazionale", "2011|Barcelona", "2012|Chelsea", "2013|Bayern Münih;Bayern Munich", "2014|Real Madrid", "2015|Barcelona", "2016|Real Madrid", "2017|Real Madrid", "2018|Real Madrid",
-  "2019|Liverpool", "2020|Bayern Münih;Bayern Munich", "2021|Chelsea", "2022|Real Madrid", "2023|Manchester City", "2024|Real Madrid"];
+  "2019|Liverpool", "2020|Bayern Münih;Bayern Munich", "2021|Chelsea", "2022|Real Madrid", "2023|Manchester City", "2024|Real Madrid", "2025|Paris Saint-Germain;PSG", "2026|Paris Saint-Germain;PSG"];
 const BALLON = ["1956|Stanley Matthews", "1957|Alfredo Di Stéfano;Di Stefano", "1958|Raymond Kopa;Kopa", "1959|Alfredo Di Stéfano;Di Stefano", "1960|Luis Suárez;Suarez", "1961|Omar Sívori;Sivori", "1962|Josef Masopust;Masopust", "1963|Lev Yashin;Yashin;Yaşin",
   "1964|Denis Law", "1965|Eusébio;Eusebio", "1966|Bobby Charlton", "1967|Flórián Albert;Florian Albert", "1968|George Best", "1969|Gianni Rivera", "1970|Gerd Müller;Gerd Muller", "1971|Johan Cruyff;Cruyff", "1972|Franz Beckenbauer;Beckenbauer",
   "1973|Johan Cruyff;Cruyff", "1974|Johan Cruyff;Cruyff", "1975|Oleg Blokhin;Blohin", "1976|Franz Beckenbauer;Beckenbauer", "1977|Allan Simonsen", "1978|Kevin Keegan", "1979|Kevin Keegan", "1980|Karl-Heinz Rummenigge;Rummenigge",
@@ -23,10 +23,10 @@ const BALLON = ["1956|Stanley Matthews", "1957|Alfredo Di Stéfano;Di Stefano", 
   "1989|Marco van Basten;Van Basten", "1990|Lothar Matthäus;Matthaus", "1991|Jean-Pierre Papin;Papin", "1992|Marco van Basten;Van Basten", "1993|Roberto Baggio;Baggio", "1994|Hristo Stoichkov;Stoichkov", "1995|George Weah;Weah",
   "1996|Matthias Sammer;Sammer", "1997|Ronaldo Nazário;Ronaldo", "1998|Zinedine Zidane;Zidane", "1999|Rivaldo", "2000|Luís Figo;Figo", "2001|Michael Owen;Owen", "2002|Ronaldo Nazário;Ronaldo", "2003|Pavel Nedvěd;Nedved", "2004|Andriy Shevchenko;Shevchenko",
   "2005|Ronaldinho", "2006|Fabio Cannavaro;Cannavaro", "2007|Kaká;Kaka", "2008|Cristiano Ronaldo", "2009|Lionel Messi;Messi", "2010|Lionel Messi;Messi", "2011|Lionel Messi;Messi", "2012|Lionel Messi;Messi", "2013|Cristiano Ronaldo",
-  "2014|Cristiano Ronaldo", "2015|Lionel Messi;Messi", "2016|Cristiano Ronaldo", "2017|Cristiano Ronaldo", "2018|Luka Modrić;Modric", "2019|Lionel Messi;Messi", "2021|Lionel Messi;Messi", "2022|Karim Benzema;Benzema", "2023|Lionel Messi;Messi", "2024|Rodri"];
-const SUPERLIG = ["1999-2000|Galatasaray", "2000-01|Fenerbahçe", "2001-02|Galatasaray", "2002-03|Beşiktaş", "2003-04|Fenerbahçe", "2004-05|Fenerbahçe", "2005-06|Fenerbahçe", "2006-07|Fenerbahçe", "2007-08|Galatasaray", "2008-09|Beşiktaş",
+  "2014|Cristiano Ronaldo", "2015|Lionel Messi;Messi", "2016|Cristiano Ronaldo", "2017|Cristiano Ronaldo", "2018|Luka Modrić;Modric", "2019|Lionel Messi;Messi", "2021|Lionel Messi;Messi", "2022|Karim Benzema;Benzema", "2023|Lionel Messi;Messi", "2024|Rodri", "2025|Ousmane Dembélé;Dembélé;Dembele"];
+const SUPERLIG = ["1999-2000|Galatasaray", "2000-01|Fenerbahçe", "2001-02|Galatasaray", "2002-03|Beşiktaş", "2003-04|Fenerbahçe", "2004-05|Fenerbahçe", "2005-06|Galatasaray", "2006-07|Fenerbahçe", "2007-08|Galatasaray", "2008-09|Beşiktaş",
   "2009-10|Bursaspor", "2010-11|Fenerbahçe", "2011-12|Galatasaray", "2012-13|Galatasaray", "2013-14|Fenerbahçe", "2014-15|Galatasaray", "2015-16|Beşiktaş", "2016-17|Beşiktaş", "2017-18|Galatasaray", "2018-19|Galatasaray",
-  "2019-20|İstanbul Başakşehir;Başakşehir", "2020-21|Beşiktaş", "2021-22|Trabzonspor", "2022-23|Galatasaray", "2023-24|Galatasaray"];
+  "2019-20|İstanbul Başakşehir;Başakşehir", "2020-21|Beşiktaş", "2021-22|Trabzonspor", "2022-23|Galatasaray", "2023-24|Galatasaray", "2024-25|Galatasaray", "2025-26|Galatasaray"];
 // kulüp|ülke|stadyum
 const CLUBS = [
   "Real Madrid|İspanya|Santiago Bernabéu;Bernabéu", "Barcelona|İspanya|Camp Nou", "Atlético Madrid|İspanya|Metropolitano;Cívitas Metropolitano", "Manchester United|İngiltere|Old Trafford", "Liverpool|İngiltere|Anfield",
