@@ -168,13 +168,13 @@ describe("gece kurma: karışık, konu ve tekrar yok", () => {
   });
 });
 
-import { hasTurkish } from "@/lib/content/en";
+import { leaksTr } from "@/lib/content/en";
 describe("İki dilli tek havuz (1:1 İngilizce)", () => {
   const bad = BANK.filter((q) => {
     const e = q.en; if (!e) return true;
-    if (hasTurkish(e.text) || hasTurkish(e.correct)) return true;
-    if (q.options && (!e.options || e.options.length !== q.options.length || e.options.some(hasTurkish))) return true;
-    if (q.items && (!e.items || e.items.length !== q.items.length || e.items.some(hasTurkish))) return true;
+    if (leaksTr(e.text) || leaksTr(e.correct)) return true;
+    if (q.options && (!e.options || e.options.length !== q.options.length || e.options.some(leaksTr))) return true;
+    if (q.items && (!e.items || e.items.length !== q.items.length || e.items.some(leaksTr))) return true;
     if (q.pairs && (!e.pairs || e.pairs.length !== q.pairs.length)) return true;
     return false;
   });

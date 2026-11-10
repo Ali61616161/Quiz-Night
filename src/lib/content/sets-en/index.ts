@@ -10,7 +10,9 @@ const key = (q: Question) => q.text + "||" + JSON.stringify(q.items ?? q.pairs ?
 export function applyOverlay(qs: Question[]): Question[] {
   for (const q of qs) {
     const v = OV[key(q)]; if (!v) continue;
-    if (q.kind === "choice" && q.options && v.o?.length === q.options.length) {
+    if (q.kind === "choice" && q.options && !v.o && q.options.every((o) => /^[\d.,\s-]+$/.test(o))) {
+      q.en = { text: v.t, options: [...q.options], correct: q.correct, explanation: v.x ?? q.en?.explanation }; // sayısal şıklar dilden bağımsız
+    } else if (q.kind === "choice" && q.options && v.o?.length === q.options.length) {
       const idx = q.options.indexOf(q.correct);
       q.en = { text: v.t, options: v.o, correct: v.o[idx], explanation: v.x ?? q.en?.explanation };
     } else if (q.kind === "open") {

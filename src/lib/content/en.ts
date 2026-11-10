@@ -474,10 +474,13 @@ ve=and
 export const DICT = new Map<string, string>(DICT_SRC.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => { const i = l.indexOf("="); return [l.slice(0, i), l.slice(i + 1)] as [string, string]; }));
 
 const TR_LETTERS = /[çğıöşüÇĞİÖŞÜ]/;
-const TR_WORDS = /\b(ve|ile|Üniversitesi|Camii|Müzesi|Köprüsü|Nehri|Dağı|Gölü|Adası|Milli|Parkı|ilçesi|ili|Sarayı|Kulesi|Şehzade|Bey|Hanım)\b/;
-const TR_FN = /\b(hangi|hangisi|kaç|nedir|kimdir|kimdir|için|olan|olarak|bir|değil|ülke|yıl|şehir|ilimiz|ilçe|adlı|eser|yazar|nedeniyle|aşağıdaki|hangisidir)\b/i;
+const TR_WORDS = /(?<![\p{L}])(ile|Müzesi|Nehri|Gölü|Adası|Milli|Parkı|ilçesi|Sarayı|Kulesi)(?![\p{L}])/u;
+const TR_FN = /(?<![\p{L}])(hangi|hangisi|kaç|nedir|kimdir|kimdir|için|olan|olarak|değil|adlı|nedeniyle|aşağıdaki|hangisidir)(?![\p{L}])/iu;
 /** Çevirisiz kalmış Türkçe işareti: işlev sözcükleri (özel adlardaki aksanlı harfler sorun sayılmaz). */
-export const leaksTr = (s: string) => TR_WORDS.test(s) || TR_FN.test(s);
+export const leaksTr = (s: string) => {
+  const t = s.replace(/[“"][^”"]*[”"]/g, " ").replace(/\([^)]*\)/g, " "); // tırnaktaki eser adları ve parantez içi özgün adlar sayılmaz
+  return TR_WORDS.test(t) || TR_FN.test(t);
+};
 export const hasTurkish = (s: string) => TR_LETTERS.test(s) || TR_WORDS.test(s);
 
 const ORD = (n: number) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
