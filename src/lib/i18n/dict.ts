@@ -322,7 +322,7 @@ Sonucu paylaş==Share the result
 Soru==Question
 Soru açık==Question open
 Soru açık değil.==The question is not open.
-Soru dili==Question language
+Oyun dili (TV ve telefonlar bu dilde açılır; herkes kendi dilini değiştirebilir)==Game language (TVs and phones open in this language; everyone can switch their own)
 Soru eklendi.==Question added.
 Soru havuzu azalıyor: yeni soru ekle ya da AI ile üret.==The question pool is running low: add questions or generate them with AI.
 Soru havuzu boş, farklı şablon seç.==The question pool is empty, pick a different template.

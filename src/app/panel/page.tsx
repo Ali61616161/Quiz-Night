@@ -79,7 +79,7 @@ function GameTab({ info, has, flash }: P) {
         <span>Takım modu:</span>
         {[["captain", "Kaptan", true], ["individual", "Bireysel", has("mode_individual")], ["majority", "Çoğunluk", has("mode_majority")]].map(([v, n, ok]) => <button key={String(v)} className={`btn ${mode === v ? "" : "btn-ghost"}`} disabled={!ok} onClick={() => setMode(String(v))}>{String(n)}{ok ? "" : " (kilitli)"}</button>)}
       </div>
-      <label>Soru dili<select className="input" value={lang} onChange={(e) => setLang(e.target.value as "tr" | "en")}><option value="tr">Türkçe (tüm konular)</option><option value="en">English (Geography, Science, Football, Sports, Film/TV, Music, Games, Literature, Technology)</option></select></label>
+      <label>Oyun dili (TV ve telefonlar bu dilde açılır; herkes kendi dilini değiştirebilir)<select className="input" value={lang} onChange={(e) => setLang(e.target.value as "tr" | "en")}><option value="tr">Türkçe (tüm konular)</option><option value="en">English (Geography, Science, Football, Sports, Film/TV, Music, Games, Literature, Technology)</option></select></label>
       <label>Soru süresi (sn)<input className="input" type="number" min={10} max={120} value={dur} onChange={(e) => setDur(Number(e.target.value))} /></label>
       <label style={{ display: "flex", gap: ".5rem", alignItems: "center", minHeight: 44 }}><input type="checkbox" checked={auto} disabled={!has("auto_host")} onChange={(e) => setAuto(e.target.checked)} style={{ width: 22, height: 22 }} /> Auto-Host (süre, kilit, açıklama ve geçiş otomatik){!has("auto_host") && " · Başlangıç planında"}</label>
       <button className="btn" style={{ minHeight: 56 }} onClick={start} disabled={busy}>Geceyi başlat</button>

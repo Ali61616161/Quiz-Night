@@ -35,7 +35,7 @@ Sıfırdan: `cp .env.example .env.local` ve değerleri doldur. Yalnızca `npm ru
 Belgeler: `SUNUM.md` (mekanlara nasıl sunulur), `DESIGN.md`, `DECISIONS.md`, `DEPLOY.md`, `KNOWN_LIMITS.md`, `TEST_REPORT.md`.
 
 ## Dil (Türkçe / English)
-Sağ üstteki **TR | EN** düğmesi tüm arayüzü değiştirir (kayıtlı tercih; oyun İngilizce açıldıysa TV ve telefonlar otomatik İngilizceye geçer). Panelde "Soru dili" ile oyunun soru dili seçilir: Türkçe havuz 7.400+ soru (17 konu); İngilizce havuz 2.600+ soru (coğrafya, bilim, futbol, spor, film/dizi, müzik, oyun, edebiyat, teknoloji).
+Sağ üstteki **TR | EN** düğmesi tüm arayüzü değiştirir (kayıtlı tercih; oyun İngilizce açıldıysa TV ve telefonlar otomatik İngilizceye geçer). Soru havuzu tektir ve iki dillidir: her sorunun, şıklarıyla birlikte birebir İngilizce karşılığı vardır; oyuncu, host ve TV kendi dilini ayrı seçebilir, sorular aynı sıra ve aynı doğru cevapla o dile döner (cevaplar sunucuda tek dile çevrilerek değerlendirilir).
 
 ## Docker
 `docker compose up -d --build` (`.env` gerekir; veri `quizhane-data` birimindedir).

@@ -28,7 +28,7 @@
 
 ## Soru havuzu v3, dil, ekip
 - 17 konu (Gündem 2000-2026, Teknoloji, Doğa ve Hayvanlar eklendi). Çoktan seçmelide yanlış şıklar benzerlik puanıyla seçilir (aynı harf/uzunluk/kelime, aynı grup: kıta, bölge, ülke); sayısal cevapta yakın sayılar, gelecek yıl yok. Gündem'de "o yıl yaşanan olay" sorusunda şıklar aynı yıldan seçilmez.
-- İngilizce havuz: aynı olgu tablolarından `en.ts` sözlüğü ve İngilizce şablonlarla üretilir; güvenilir çevirisi olmayan satır atlanır (Türkçe karakter/sözcük kalırsa soru havuza girmez).
+- Tek iki dilli havuz: ayrı İngilizce havuz yoktur. Her soru `en` bloğu taşır (şıklar/öğeler/çiftler Türkçeyle aynı sırada). İstemci SSE'de `lang` gönderir; sunucu gösterimi o dile çevirir, gelen cevabı Türkçeye indirger (`canonAnswer`), açık cevaplar iki dilde de kabul edilir. İngilizce karşılıklar tablo sözlüğü + `sets-en/overlay.json` (Türkçe metne anahtarlı, şık/öğe uyumu doğrulanarak) ile gelir; `tests/bank.test.ts` her soruda İngilizce karşılık ve Türkçe sızıntısı olmadığını denetler.
 - Arayüz dili: `I18nBoot` + çalışma zamanı DOM çevirisi (`i18n/dict.ts`, ~700 satır + dinamik kalıplar). Varsayılan Türkçe; seçim `localStorage`'da; oyun İngilizce açıldıysa ve kullanıcı seçim yapmadıysa TV/telefonlar otomatik geçer. TV'de düğme yok.
 - Ekip: sahip host davet edebilir (şifre belirleme bağlantısı e-postayla); host oyun açar, abonelik/marka/davet/lig kapatma yalnızca sahibe.
 - Dağıtım: Dockerfile (standalone çıktı), docker-compose, SUNUM.md.

@@ -33,7 +33,7 @@ Son tam koşu: 67 birim testi geçti; e2e, 25 güvenlik kontrolü ve yük testi 
 ## Son tam koşu (bu sürüm)
 | Set | Sonuç |
 |---|---|
-| `npm test` | 77 test geçti (soru havuzu, İngilizce havuz, çeviri kapsamı, sunucu, motor) |
+| `npm test` | 77 test geçti (soru havuzu, 7.530 sorunun tamamında 1:1 İngilizce parite, çeviri kapsamı, sunucu, motor) |
 | `tsc` / lint / `npm audit` | temiz / 0 hata / 0 açık |
 | `e2e/full-game.mjs` | geçti |
 | `e2e/i18n.mjs` (EN) | tüm ekranlar ve oyun akışı, 0 Türkçe kalıntı |
