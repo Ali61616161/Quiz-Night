@@ -76,3 +76,14 @@ Metinler `src/lib/legal.ts` içindedir; şirket kimliği `NEXT_PUBLIC_COMPANY_*`
 - **Soru içeriği/telif**: soru metinleri özgündür; film/şarkı/kitap adları olgu olarak kullanılır. Logo, afiş, albüm kapağı, ses/video **eklemeyin** ya da lisanslayın.
 - **Marka**: ürün adını (şimdilik "Quizhane") TÜRKPATENT'te ve alan adında kontrol edin; `NEXT_PUBLIC_APP_NAME` ile değiştirilebilir.
 - **İnceleme turu**: avukat metni onayladıktan sonra `legal.ts` içeriğini onay tarihiyle sürümleyin; sonraki her değişiklik yeniden incelensin.
+
+## 6. Şirket değil, bireysel (şahıs) yayıncı olarak yayınlamak
+
+Hukuki sonuçlar (avukatınla teyit et; bu bir hukuk görüşü değildir):
+- **Vergi/ticari kimlik:** düzenli ücret alacaksan (abonelik) şahıs işletmesi olarak vergi mükellefiyeti açman gerekir; "serbest meslek makbuzu/fatura" ya da basit usul hesabı mali müşavirle belirlenir. Gelir tek seferlik/denemelik değilse "sadece bireysel" kalmak mümkün olmayabilir.
+- **iyzico:** bireysel/şahıs hesabı ile başvuru mümkündür (vergi levhası + IBAN); kart verisi sana uğramadığı için PCI yükün düşük kalır.
+- **KVKK:** veri sorumlusu/işleyen sen olursun. Şirket unvanı yerine ad-soyad ve iletişim adresi (e-posta + KEP varsa) yazılır. VERBİS'e kayıt yükümlülüğü, çalışan sayısı ve ciro eşiklerine bağlı bir muafiyete girebilir; muafiyeti avukattan netleştir. Muaf olsan bile aydınlatma metni ve veri işleme sözleşmesi (mekanlarla) gerekir.
+- **Adres:** ad-soyad ve tebligat adresi sitede görünür (e-ticaret mevzuatı satıcı bilgisini ister). Ev adresini göstermek istemezsen iş adresi/sanal ofis düşün.
+- **Sorumluluk:** şirket gibi sınırlı sorumluluk yoktur; kişisel malvarlığınla sorumlusun. Kullanım koşullarındaki sorumluluk sınırlamaları ve sigorta (mesleki sorumluluk) bunu azaltır, ortadan kaldırmaz.
+- **Ortam değişkenleri:** `NEXT_PUBLIC_COMPANY_NAME` alanına ad-soyadını (veya işletme adını), `NEXT_PUBLIC_COMPANY_ADDRESS` alanına tebligat adresini yaz; MERSİS boş kalabilir. Sayfalarda "Veri sorumlusu" olarak görünür.
+- Büyüyünce limited şirkete geçiş mümkündür; hesap, mekan ve veri devri için kullanıcılara bildirim ve yeni sözleşme gerekir.
