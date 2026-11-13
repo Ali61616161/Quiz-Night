@@ -50,3 +50,10 @@ Bu turda testlerin bulduğu gerçek hatalar: iki olgu kümesinin aynı kimliği 
 | `e2e/fun-game.mjs` | Eğlence gecesi 32 soru, 3 takım, tüm tur türleri baştan sona; TV'de oylama sırasında yazar görünmez |
 | `e2e/fun-i18n.mjs` | Yeni ekranlar (telefon/TV/host) İngilizce modda: 0 Türkçe kalıntı |
 | `e2e/security.mjs` | 27 kontrol (koşul kabulü olmadan kayıt reddi dahil) |
+
+## İki dilli uçtan uca ve havuz derinliği (Kasım 2026)
+| Kontrol | Sonuç |
+|---|---|
+| `tests/bilingual.test.ts` – derinlik | Her şablon (klasik, tematik, hızlı, bil bakalım, eğlence, seri, sessiz, saçma, sahte, tahmin, emoji) 30 ardışık gecede tam boyutta, tekrarsız ve havuz uyarısız; her tema 8 gece |
+| `tests/bilingual.test.ts` – dil eşdeğerliği | Her şablon için aynı gece Türkçe ve İngilizce istemciyle oynanır (joker, sabotaj, bahis, oylama dahil): puanlar birebir aynı, İngilizce ekranlarda Türkçe sızıntı yok |
+| Havuz boyutları | Ana havuz 7.500+, emoji ≈760, saçma ≈740, sahte cevap 5.000+, tahmin ≈970 |

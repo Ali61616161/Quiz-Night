@@ -1,4 +1,6 @@
 import type { Question } from "@/lib/engine/types";
+import { normalizeTr } from "@/lib/engine/normalize";
+import { EMOJI_GROUPS, FUNNY_SUBJECTS, FUNNY_TEMPLATES, parseEmojiRows } from "./fun-emoji";
 import { rng, sample } from "./gen";
 
 /**
@@ -60,6 +62,32 @@ function emojiQuestions(): Question[] {
       });
     });
   }
+  // Tek emoji: "Bu emoji hangi hayvanı gösteriyor?" ve ters: "Hangisi 'Zürafa' emojisidir?" (şıklar emoji, dilden bağımsız)
+  for (const [gid, g] of Object.entries(EMOJI_GROUPS)) {
+    const rows = parseEmojiRows(g);
+    const names = new Set(rows.map((x) => x[1]));
+    if (names.size !== rows.length) throw new Error(`emoji grubu ${gid}: yinelenen ad`);
+    rows.forEach((row, i) => {
+      const r = rng(`emo1:${gid}:${i}`);
+      const others = rows.filter((_, j) => j !== i);
+      const pick = sample(others, 3, r); const idx = Math.floor(r() * 4);
+      const trOpts = pick.map((x) => x[1]); const enOpts = pick.map((x) => x[2]);
+      trOpts.splice(idx, 0, row[1]); enOpts.splice(idx, 0, row[2]);
+      out.push({
+        id: `fun-emoji1-${gid}-${i}`, category: FUN_CATS.emoji, subtopic: `tek-${gid}`, difficulty: 1, kind: "choice",
+        text: `Bu emoji hangi ${g.tr} gösteriyor? ${row[0]}`, options: trOpts, correct: row[1], accepted: [], status: "approved", reports: 0,
+        en: { text: `Which ${g.en} does this emoji show? ${row[0]}`, options: enOpts, correct: row[2] },
+      });
+      const r2 = rng(`emo2:${gid}:${i}`);
+      const pick2 = sample(others, 3, r2); const idx2 = Math.floor(r2() * 4);
+      const emoOpts = pick2.map((x) => x[0]); emoOpts.splice(idx2, 0, row[0]);
+      out.push({
+        id: `fun-emoji2-${gid}-${i}`, category: FUN_CATS.emoji, subtopic: `ters-${gid}`, difficulty: 1, kind: "choice",
+        text: `Hangisi “${row[1]}” emojisidir?`, options: emoOpts, correct: row[0], accepted: [], status: "approved", reports: 0,
+        en: { text: `Which one is the “${row[2]}” emoji?`, options: [...emoOpts], correct: row[0] },
+      });
+    });
+  }
   return out;
 }
 
@@ -107,7 +135,9 @@ const FUNNY: [string, string][] = [
   ["Bu mekâna konabilecek en tuhaf kural nedir?", "What is the strangest rule you could put up in this venue?"],
 ];
 function funnyQuestions(): Question[] {
-  return FUNNY.map(([tr, en], i) => ({
+  const combo: [string, string][] = [];
+  for (const [subj, esubj] of FUNNY_SUBJECTS) for (const [t, e] of FUNNY_TEMPLATES) combo.push([t.replace("{s}", subj), e.replace("{s}", esubj)]);
+  return [...FUNNY, ...combo].map(([tr, en], i) => ({
     id: `fun-funny-${i}`, category: FUN_CATS.funny, difficulty: 1 as const, kind: "freeform" as const, text: tr, correct: "", accepted: [],
     status: "approved" as const, reports: 0, en: { text: en, correct: "" },
   }));
@@ -191,3 +221,40 @@ function guessQuestions(): Question[] {
 }
 
 export const FUN_BANK: Question[] = [...emojiQuestions(), ...funnyQuestions(), ...bluffQuestions(), ...guessQuestions()];
+
+// ---------- Ana havuzdan türetilen sahte cevap ve tahmin soruları ----------
+const numeric = (v: string) => /^-?\d+$/.test(v.trim());
+const BAD_TEXT = /^\d{3,4} yılında|yılında doğan|aşağıdaki|hangisi\b|hangileri|hangi biri|doğru olan|yanlış olan|hangi.*arasında/i;
+/** Şıklı/açık sorulardan "açık uçlu" sahte cevap soruları: aynı kimlik (görülmüş sayılır), kategori "Sahte Cevap", altkonu özgün kategori. */
+export function deriveBluff(bank: Question[]): Question[] {
+  const seen = new Set<string>(); const out: Question[] = [];
+  for (const q of bank) {
+    if ((q.kind !== "choice" && q.kind !== "open") || !q.en || FUN_CAT_SET.has(q.category)) continue;
+    const a = q.correct.trim();
+    if (!/\p{L}/u.test(a) || numeric(a) || a.length < 3 || a.length > 36 || q.text.length > 150 || BAD_TEXT.test(q.text) || a.includes("[")) continue;
+    if ((q.en.correct ?? "").length < 2) continue;
+    const key = normalizeTr(q.text); if (seen.has(key)) continue; seen.add(key);
+    out.push({
+      id: q.id, category: FUN_CATS.bluff, subtopic: `${q.category}/${q.subtopic ?? "-"}`, difficulty: q.difficulty, kind: "open",
+      text: q.text, correct: q.correct, accepted: q.accepted ?? [], explanation: q.explanation, status: "approved", reports: 0,
+      en: { text: q.en.text, correct: q.en.correct, accepted: q.en.accepted ?? [], explanation: q.en.explanation },
+    });
+  }
+  return out;
+}
+/** Sayısal cevaplı sorulardan (yıl, adet) "en yakın tahmin kazanır" soruları. */
+export function deriveGuess(bank: Question[]): Question[] {
+  const seen = new Set<string>(); const out: Question[] = [];
+  for (const q of bank) {
+    if ((q.kind !== "choice" && q.kind !== "open") || !q.en || FUN_CAT_SET.has(q.category)) continue;
+    if (!numeric(q.correct) || !/hangi yıl|kaç/i.test(q.text) || /plaka|atom numarası|kaçıncı|sıra/i.test(q.text) || q.text.length > 140) continue;
+    const v = Number(q.correct); if (!Number.isInteger(v) || Math.abs(v) > 1e9) continue;
+    const key = normalizeTr(q.text); if (seen.has(key)) continue; seen.add(key);
+    out.push({
+      id: q.id, category: FUN_CATS.guess, subtopic: `${q.category}/${q.subtopic ?? "-"}`, difficulty: q.difficulty, kind: "estimate",
+      text: `${q.text} (En yakın tahmin kazanır)`, correct: q.correct, accepted: [], explanation: q.explanation, status: "approved", reports: 0,
+      en: { text: `${q.en.text} (The closest estimate wins)`, correct: q.correct, explanation: q.en.explanation },
+    });
+  }
+  return out;
+}

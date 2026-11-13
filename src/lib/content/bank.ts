@@ -30,7 +30,7 @@ import { ESTIMATES, ORDERINGS } from "./facts";
 import { ASK_EN, toEn } from "./en";
 import { estimates, expand, expandSingles, matchings, orderings, type EnHelper } from "./gen";
 import { SINGLES_EN, applyOverlay } from "./sets-en";
-import { FUN_BANK, FUN_CATS, FUN_CAT_SET } from "./fun";
+import { FUN_BANK, FUN_CATS, FUN_CAT_SET, deriveBluff, deriveGuess } from "./fun";
 import { BILIM, BILIM_SINGLES } from "./sets/bilim";
 import { DIZIFILM, DIZIFILM_SINGLES } from "./sets/dizifilm";
 import { EDEBIYAT, EDEBIYAT_SINGLES } from "./sets/edebiyat";
@@ -117,6 +117,8 @@ function build(): Question[] {
 }
 
 export const BANK: Question[] = build();
+/** Eğlence turlarının tüm havuzu: elle yazılanlar + ana havuzdan türetilenler (sahte cevap, tahmin). */
+export const FUN_ALL: Question[] = [...FUN_BANK, ...deriveBluff(BANK), ...deriveGuess(BANK)];
 
 /** Kalıcı zorluk düzeltmeleri (süper admin onayı) açılışta uygulanır. */
 export function applyDifficultyOverrides(o: Record<string, 1 | 2 | 3>) { for (const q of BANK) if (o[q.id]) q.difficulty = o[q.id]; }
@@ -202,7 +204,7 @@ export function buildNight(opts: {
   // İngilizce havuzda bir konu yeterince soru içermiyorsa karışık havuza geçilir (host'a düşük havuz uyarısı gider)
   const thin = Boolean(cats && base.filter((q) => cats!.includes(q.category)).length < 60);
   if (thin) cats = undefined;
-  const pool = [...base, ...FUN_BANK, ...(opts.extra ?? [])].filter((q) => (q.status ?? "approved") === "approved" && (opts.allowed.image || !q.image) && opts.allowed.kinds.has(q.kind));
+  const pool = [...base, ...FUN_ALL, ...(opts.extra ?? [])].filter((q) => (q.status ?? "approved") === "approved" && (opts.allowed.image || !q.image) && opts.allowed.kinds.has(q.kind));
   const used = new Set<string>();
   const questions: Question[] = [];
   let low = thin;

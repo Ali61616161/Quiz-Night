@@ -36,7 +36,7 @@
 ## Eğlence turları ile ilgili
 - Saçma/sahte cevaplarda küfür filtresi kaba bir listedir (takım adlarıyla aynı); host TV'de uygunsuz cevabı görürse soruyu "hatalı say" ile iptal edebilir. Tek tek cevap gizleme yok.
 - Sahte cevap sorularının doğru cevabı kısa ve tek biçimlidir; oyuncu gerçeğe çok yakın yazım farkıyla (ör. "Kanbera") yazarsa kabul edilen yazımlar listesinde olanlar reddedilir, listede olmayan yakın yazımlar kabul edilir (oylamada ayrı seçenek olur).
-- Eğlence içeriği hacmi küçüktür (≈70 emoji, 40 saçma, 35 sahte cevap, 20 tahmin); mekan aynı içeriği tekrar görürse görülmüş sorular yeniden kullanılır.
+- Eğlence havuzu: ≈760 emoji, ≈740 saçma cevap, ≈970 tahmin ve (ana havuzdan türetilen) 5.000+ sahte cevap sorusu. Mekan başına ardışık gece sayısı (tekrarsız): Klasik ≈215, Eğlence gecesi ≈150, Saçma cevap ≈90, Tahmin ≈80, Emoji ≈60, tek konulu tematik ≈38. Sahte cevap ve tahmin soruları ana havuzdaki doğrulanmış olgulardan türetilir, bu yüzden aynı olgu ana gecelerde de görülmüş sayılır (tekrar etmez).
 - Oylama sırasında host cevap yazarlarını panelde görür (adalet için host'un söylememesi gerekir).
 - Hukuki metinlerin İngilizcesi kolaylık çevirisidir; Türkçe metin esastır.
 - Yeni kayıtlarda koşul kabulü kaydedilir; ekip davetiyle oluşturulan host hesapları için ayrı kabul adımı yoktur (hesap sahibi sorumludur).
