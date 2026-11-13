@@ -28,6 +28,7 @@ export function validateAnswer(q: Question, value: string): boolean {
   if (!value || value.length > 600) return false;
   switch (q.kind) {
     case "open": return value.trim().length > 0;
+    case "freeform": return value.trim().length > 0 && value.length <= 80;
     case "choice": return Boolean(q.options?.includes(value));
     case "estimate": return Number.isFinite(parseNum(value));
     case "ordering": {
@@ -53,6 +54,7 @@ export function isAnswerCorrect(q: Question, value: string): boolean {
     case "estimate": return parseNum(value) === parseNum(q.correct);
     case "ordering": return value === JSON.stringify(q.items);
     case "matching": return value === JSON.stringify(q.pairs!.map((p) => p[1]));
+    case "freeform": return false;
   }
 }
 
@@ -75,7 +77,7 @@ export function resolveVotes(g: Game) {
 }
 
 /** Geçerli sorunun puanları. Host düzeltmesi, hatalı soru, joker, bahis ve hız burada. */
-export function scoreQuestion(g: Pick<Game, "questions" | "qIndex" | "teams" | "answers" | "suggestions" | "overrides" | "settings" | "mode" | "wagers" | "jokerActive" | "voided">) {
+export function scoreQuestion(g: Pick<Game, "questions" | "qIndex" | "teams" | "answers" | "suggestions" | "overrides" | "settings" | "mode" | "wagers" | "jokerActive" | "voided" | "sabotage" | "streakBase" | "pool" | "picks" | "jokerKind">) {
   const q = g.questions[g.qIndex];
   const results: Game["results"] = {};
   const s = g.settings;
@@ -89,6 +91,7 @@ export function scoreQuestion(g: Pick<Game, "questions" | "qIndex" | "teams" | "
       if (a && validateAnswer(q, a.value)) bestDist = Math.min(bestDist, Math.abs(parseNum(a.value) - parseNum(q.correct)));
     }
   }
+  if (round === "bluff" || round === "funny") return scoreVote(g, q, round);
   const teamCorrect = (a?: { value: string }) =>
     !a ? false : q.kind === "estimate" ? Math.abs(parseNum(a.value) - parseNum(q.correct)) === bestDist : isAnswerCorrect(q, a.value);
 
@@ -116,6 +119,8 @@ export function scoreQuestion(g: Pick<Game, "questions" | "qIndex" | "teams" | "
         gained = correct ? w : -w;
       } else if (correct) {
         gained = s.points;
+        if (round === "streak") gained = Math.round(s.points * (1 + 0.25 * Math.min(g.streakBase[team.id] ?? 0, 4)));
+        if (q.kind === "estimate" && bestDist === 0) gained = Math.round(gained * 1.5); // tam isabet bonusu
         if (round === "speed" && s.speedBonus) {
           const rank = Math.max(0, speedOrder.indexOf(team.id));
           gained = Math.round(s.points * Math.max(0.3, 1 - 0.1 * rank));
@@ -126,8 +131,41 @@ export function scoreQuestion(g: Pick<Game, "questions" | "qIndex" | "teams" | "
       correct = g.overrides[team.id];
       gained = correct ? s.points : 0;
     }
-    if (g.jokerActive[team.id] && gained > 0) gained *= 2;
+    if (g.jokerActive[team.id] && gained > 0 && g.jokerKind?.[team.id] !== "fifty") gained *= 2;
     results[team.id] = { correct, gained, ...(fraction !== undefined ? { fraction } : {}) };
   }
+  applySabotage(g, results);
+  return results;
+}
+
+/** Sabotaj: hedef takımın bu sorudaki kazancı yarıya iner (yalnızca pozitifse). */
+function applySabotage(g: Pick<Game, "sabotage">, results: Game["results"]) {
+  for (const target of new Set(Object.values(g.sabotage ?? {}))) {
+    const r = results[target];
+    if (r && r.gained > 0) r.gained = Math.floor(r.gained / 2);
+  }
+}
+
+/** bluff: gerçeği bulan puan alır, kendi sahte cevabına kanan her takım yazara puan kazandırır. funny: aldığı her oy puan getirir. */
+function scoreVote(g: Pick<Game, "teams" | "overrides" | "settings" | "voided" | "pool" | "picks" | "sabotage" | "jokerActive">, q: Question, round: "bluff" | "funny") {
+  const results: Game["results"] = {};
+  const half = Math.round(g.settings.points / 2);
+  for (const team of g.teams) {
+    if (g.voided) { results[team.id] = { correct: false, gained: 0 }; continue; }
+    let gained = 0, correct = false;
+    const picked = g.pool.find((e) => e.id === g.picks[team.id]);
+    if (round === "bluff" && picked?.truth) { gained += g.settings.points; correct = true; }
+    const mine = g.pool.filter((e) => e.teamIds.includes(team.id));
+    for (const e of mine) {
+      const fooled = Object.entries(g.picks).filter(([tid, id]) => id === e.id && tid !== team.id).length;
+      gained += fooled * half;
+    }
+    if (team.id in g.overrides) { correct = g.overrides[team.id]; if (!correct) gained = 0; }
+    if (round === "funny") correct = gained > 0;
+    if (g.jokerActive[team.id] && gained > 0) gained *= 2;
+    results[team.id] = { correct, gained };
+  }
+  void q;
+  applySabotage(g, results);
   return results;
 }

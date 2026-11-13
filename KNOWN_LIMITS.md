@@ -32,3 +32,11 @@
 - "Gündem" konusu 2000–2026 (Kasım 2026) arasıdır; 2026 satırları internetten iki kaynakla teyit edilmiştir, ancak son aylardaki olaylar için her yıl gözden geçirin. 2026 Nobel sonuçları ve belirsiz haberler bilerek eklenmemiştir.
 - Marka planında "mekan görseli" arka planı hâlâ yok.
 - Resim turu için havuzda görsel soru yok.
+
+## Eğlence turları ile ilgili
+- Saçma/sahte cevaplarda küfür filtresi kaba bir listedir (takım adlarıyla aynı); host TV'de uygunsuz cevabı görürse soruyu "hatalı say" ile iptal edebilir. Tek tek cevap gizleme yok.
+- Sahte cevap sorularının doğru cevabı kısa ve tek biçimlidir; oyuncu gerçeğe çok yakın yazım farkıyla (ör. "Kanbera") yazarsa kabul edilen yazımlar listesinde olanlar reddedilir, listede olmayan yakın yazımlar kabul edilir (oylamada ayrı seçenek olur).
+- Eğlence içeriği hacmi küçüktür (≈70 emoji, 40 saçma, 35 sahte cevap, 20 tahmin); mekan aynı içeriği tekrar görürse görülmüş sorular yeniden kullanılır.
+- Oylama sırasında host cevap yazarlarını panelde görür (adalet için host'un söylememesi gerekir).
+- Hukuki metinlerin İngilizcesi kolaylık çevirisidir; Türkçe metin esastır.
+- Yeni kayıtlarda koşul kabulü kaydedilir; ekip davetiyle oluşturulan host hesapları için ayrı kabul adımı yoktur (hesap sahibi sorumludur).

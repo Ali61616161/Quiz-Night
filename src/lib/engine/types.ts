@@ -5,9 +5,17 @@ export type Phase =
   | "answer_reveal" | "scoreboard" | "final";
 
 /** Cevap biçimi. */
-export type QuestionKind = "open" | "choice" | "ordering" | "matching" | "estimate";
-/** Tur tipi. "all" = Herkes cevaplar. */
-export type RoundType = "all" | "speed" | "wager" | "final";
+export type QuestionKind = "open" | "choice" | "ordering" | "matching" | "estimate" | "freeform";
+/**
+ * Tur tipi. "all" = Herkes cevaplar.
+ * streak: zamana karşı seri (süre kısalır, art arda doğru çarpan kazandırır) · silent: sessiz tur (konuşmak yok, herkes oy verir)
+ * bluff: sahte cevap yaz, gerçeği bul · funny: saçma/komik cevap yaz, takımlar oylar.
+ */
+export type RoundType = "all" | "speed" | "wager" | "final" | "streak" | "silent" | "bluff" | "funny";
+export const VOTE_ROUNDS: readonly RoundType[] = ["bluff", "funny"];
+export type JokerKind = "double" | "fifty";
+/** Oylama aşamasındaki bir seçenek: gerçek cevap (teamIds boş) ya da takımların yazdığı cevap. */
+export interface PoolEntry { id: string; text: string; teamIds: string[]; truth: boolean }
 export type TeamMode = "captain" | "majority" | "individual";
 
 /** Sorunun İngilizce karşılığı. Dizi alanları (options/items/pairs) Türkçe ile aynı sıradadır. */
@@ -91,6 +99,12 @@ export interface Game {
   wagers: Record<string, number>;
   jokersUsed: string[];
   jokerActive: Record<string, boolean>;
+  jokerKind: Record<string, JokerKind>;
+  sabotage: Record<string, string>; // saldıran takım → hedef takım (bu soru)
+  sabotageUsed: string[];
+  streakBase: Record<string, number>; // seri turunda soruya girerken art arda doğru sayısı
+  pool: PoolEntry[]; // bluff/funny oylama seçenekleri
+  picks: Record<string, string>; // takım → seçilen PoolEntry.id
   results: Record<string, { correct: boolean; gained: number; fraction?: number }>;
   overrides: Record<string, boolean>;
   voided: boolean;

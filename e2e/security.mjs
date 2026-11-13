@@ -91,8 +91,9 @@ await check("oturumsuz panel/admin/cron uçları kapalı", async () => {
 // --- Hesap akışı ---
 let cookie = "";
 const email = `t${Date.now()}@test.co`, password = "cok-uzun-sifre-1";
-await check("kısa şifre reddedilir", async () => { assert.equal((await post("/api/auth/signup", { email, password: "kisa", venueName: "Mekan" })).status, 400); });
-const su = await (await post("/api/auth/signup", { email, password, venueName: "Test Kafe" })).json();
+await check("koşullar kabul edilmeden kayıt yapılamaz", async () => { assert.equal((await post("/api/auth/signup", { email: "nokabul@test.co", password: "uzun-sifre-123", venueName: "Mekan" })).status, 400); });
+await check("kısa şifre reddedilir", async () => { assert.equal((await post("/api/auth/signup", { email, password: "kisa", venueName: "Mekan", acceptTerms: true })).status, 400); });
+const su = await (await post("/api/auth/signup", { email, password, venueName: "Test Kafe", acceptTerms: true })).json();
 await check("doğrulamadan giriş yapılamaz, doğrulayınca yapılır", async () => {
   assert.equal((await post("/api/auth/login", { email, password })).status, 401);
   assert.ok(su.devVerifyUrl, "geliştirme doğrulama bağlantısı");
@@ -121,14 +122,14 @@ await check("ücretsiz günlük 2 oyun sınırı", async () => {
   assert.equal((await post("/api/games", { template: "quick" }, C)).status, 402);
 });
 await check("kart reddi planı açmaz; geçerli ödeme + kupon yok → plan açılır", async () => {
-  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_fail" }, C)).status, 402);
-  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_ok", coupon: "YOKKUPON" }, C)).status, 402);
-  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "yearly", paymentToken: "tok_ok" }, C)).status, 200);
+  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_fail", acceptSale: true }, C)).status, 402);
+  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_ok", acceptSale: true, coupon: "YOKKUPON" }, C)).status, 402);
+  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "yearly", paymentToken: "tok_ok", acceptSale: true }, C)).status, 200);
   assert.equal((await fetch(BASE + "/api/venue/stats", { headers: C })).status, 200);
   assert.equal((await post("/api/venue/brand", { color1: "#112233", color2: "#F4B942", font: "serif", bg: "cuha" }, C)).status, 402); // marka yalnız Marka planında
 });
 await check("Marka planı: logo güvenliği (script'li SVG reddedilir, sahte PNG reddedilir, temiz SVG kabul)", async () => {
-  assert.equal((await post("/api/billing/subscribe", { plan: "brand", cycle: "monthly", paymentToken: "tok_ok" }, C)).status, 200);
+  assert.equal((await post("/api/billing/subscribe", { plan: "brand", cycle: "monthly", paymentToken: "tok_ok", acceptSale: true }, C)).status, 200);
   const up = (body, extra = {}) => fetch(BASE + "/api/venue/logo", { method: "POST", headers: { "Content-Type": "application/octet-stream", Origin: BASE, ...C, ...extra }, body });
   assert.equal((await up('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>')).status, 400);
   assert.equal((await up("<html><script>alert(1)</script></html>")).status, 415);
@@ -157,7 +158,7 @@ await check("plan düşürülünce özellikler kapanır, soru verisi silinmez", 
 });
 await check("başka mekanın verisine erişilemez (oturum başka mekana bağlı)", async () => {
   const e2 = `u${Date.now()}@test.co`;
-  const s2 = await (await post("/api/auth/signup", { email: e2, password, venueName: "Diğer" })).json();
+  const s2 = await (await post("/api/auth/signup", { email: e2, password, venueName: "Diğer", acceptTerms: true })).json();
   await fetch(s2.devVerifyUrl, { redirect: "manual" });
   const c2 = (await post("/api/auth/login", { email: e2, password })).headers.get("set-cookie").split(";")[0];
   const q = await (await fetch(BASE + "/api/venue/questions", { headers: { Cookie: c2 } })).json();
@@ -174,7 +175,7 @@ await check("ekip: sahip host davet eder, host şifresini belirler; host aboneli
   assert.equal(lr.status, 200);
   hostCookie = lr.headers.get("set-cookie").split(";")[0];
   const H = { Cookie: hostCookie };
-  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_ok" }, H)).status, 403);
+  assert.equal((await post("/api/billing/subscribe", { plan: "pro", cycle: "monthly", paymentToken: "tok_ok", acceptSale: true }, H)).status, 403);
   assert.equal((await post("/api/venue/brand", { color1: "#112233", color2: "#F4B942", font: "serif", bg: "cuha" }, H)).status, 403);
   assert.equal((await post("/api/venue/invite", { email: "x@y.co" }, H)).status, 403);
   assert.notEqual((await post("/api/games", { template: "quick" }, H)).status, 403); // host oyun açabilir (günlük sınır 402 olabilir)

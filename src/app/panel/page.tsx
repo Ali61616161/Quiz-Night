@@ -70,7 +70,7 @@ function GameTab({ info, has, flash }: P) {
     <section style={{ display: "grid", gap: ".8rem" }}>
       <h2 style={{ fontSize: "1.6rem" }}>Gece şablonu</h2>
       <div style={{ display: "grid", gap: ".5rem" }}>
-        {[["classic", "Klasik gece", "5 tur karışık konu + tahmin + final bahis sorusu"], ["themed", "Tematik gece", "Tek konu seç: 17 konudan biri"], ["quick", "Hızlı gece (45 dk)", "3 tur, hız turu dahil"], ["bilbakalim", "Bil Bakalım turu", "Kısa ve hızlı tek tur"]].map(([id, n, d]) => (
+        {[["classic", "Klasik gece", "5 tur karışık konu + tahmin + final bahis sorusu"], ["themed", "Tematik gece", "Tek konu seç: 17 konudan biri"], ["quick", "Hızlı gece (45 dk)", "3 tur, hız turu dahil"], ["bilbakalim", "Bil Bakalım turu", "Kısa ve hızlı tek tur"], ["party", "Eğlence gecesi", "Sessiz tur, emoji, zamana karşı seri, sahte cevap, saçma cevap ve tahmin yarışı bir arada"], ["streak", "Zamana karşı seri", "Her soruda süre kısalır; art arda doğru bilen çarpan kazanır"], ["silent", "Sessiz gece", "Konuşmak yasak: herkes telefonundan oy verir"], ["funny", "Saçma cevap gecesi", "Doğru cevap yok: komik cevap yaz, en iyisine oy ver"], ["bluff", "Sahte cevap gecesi", "İkna edici yalan yaz, başkalarını kandır, gerçeği bul"], ["guess", "Tahmin yarışı", "Sayısal tahminler; en yakın kazanır, tam isabet bonus"], ["emoji", "Emoji tahmini", "Emojilerden film, dizi, animasyon ve ülke bul"]].map(([id, n, d]) => (
           <button key={id} className={`btn ${template === id ? "" : "btn-ghost"}`} style={{ justifyContent: "flex-start", textAlign: "left", flexDirection: "column", alignItems: "flex-start", padding: ".6rem 1rem" }} aria-pressed={template === id} onClick={() => setTemplate(id)}><strong>{n}</strong><span style={{ fontWeight: 400 }}>{d}</span></button>
         ))}
       </div>
@@ -238,8 +238,9 @@ function BillingTab({ info, flash, reload }: P) {
   const [bill, setBill] = useState({ company: "", taxNo: "", address: "" });
   const load = useCallback(() => api<NonNullable<typeof st>>("/api/billing/state").then((s) => { setSt(s); if (s.billing) setBill(s.billing); }), []);
   useEffect(() => { load(); }, [load]);
+  const [sale, setSale] = useState(false);
   const buy = async (plan: PlanId) => {
-    try { await api("/api/billing/subscribe", { plan, cycle, coupon: coupon || undefined, paymentToken: card || "tok_demo" }); flash(plan === "free" ? "Ücretsiz plana geçildi. Veriler silinmedi." : "Abonelik başladı."); load(); reload(); }
+    try { await api("/api/billing/subscribe", { plan, cycle, coupon: coupon || undefined, paymentToken: card || "tok_demo", acceptSale: sale }); flash(plan === "free" ? "Ücretsiz plana geçildi. Veriler silinmedi." : "Abonelik başladı."); load(); reload(); }
     catch (e) { flash((e as Error).message); }
   };
   return (
@@ -251,6 +252,10 @@ function BillingTab({ info, flash, reload }: P) {
         <input className="input" style={{ width: 180 }} placeholder="Kupon / pilot kodu" value={coupon} onChange={(e) => setCoupon(e.target.value)} autoCapitalize="off" />
         <input className="input" style={{ width: 200 }} placeholder="Ödeme belirteci (demo)" value={card} onChange={(e) => setCard(e.target.value)} autoCapitalize="off" />
       </div>
+      <label style={{ display: "flex", gap: ".6rem", alignItems: "flex-start" }}>
+        <input type="checkbox" checked={sale} onChange={(e) => setSale(e.target.checked)} style={{ width: 24, height: 24, marginTop: 2 }} />
+        <span><a href="/satis" target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>Ön bilgilendirme ve iptal/iade koşullarını</a> okudum; hizmetin hemen başlamasını ve elektronik ortamda anında ifa edilen hizmetlerde cayma hakkının bulunmadığını kabul ediyorum.</span>
+      </label>
       <div style={{ display: "grid", gap: ".5rem" }}>
         {(Object.values(PLANS)).map((p) => (
           <div key={p.id} style={{ display: "flex", gap: ".8rem", alignItems: "center", borderTop: "1px solid var(--cuha-line)", paddingTop: ".5rem", flexWrap: "wrap" }}>

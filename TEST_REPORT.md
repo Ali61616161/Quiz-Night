@@ -42,3 +42,11 @@ Son tam koşu: 67 birim testi geçti; e2e, 25 güvenlik kontrolü ve yük testi 
 | Yük (40 takım/200 oyuncu) | hata 0, cevap p50 ~190 ms, yayın p50 ~150 ms |
 
 Bu turda testlerin bulduğu gerçek hatalar: iki olgu kümesinin aynı kimliği paylaşması (İngilizce şablonlar ve "programlama dilleri" eşleştirmesi yanlış kümeye gidiyordu), gelecek yıl şıkkı üretimi (2034), "Stadyumu stadyumu" metni, dil düğmesinin e2e'de yanlış tıklanması, ekran okuyucu kontrastı.
+
+## Eğlence turları ve sözleşme güncellemesi (Kasım 2026)
+| Kontrol | Sonuç |
+|---|---|
+| `npm test` | 103 test geçti (tur kuralları, puanlama, oylama, sızıntı, moderasyon, eğlence içeriği, şablonlar, hukuki metin İngilizcesi, kayıt kabulü) |
+| `e2e/fun-game.mjs` | Eğlence gecesi 32 soru, 3 takım, tüm tur türleri baştan sona; TV'de oylama sırasında yazar görünmez |
+| `e2e/fun-i18n.mjs` | Yeni ekranlar (telefon/TV/host) İngilizce modda: 0 Türkçe kalıntı |
+| `e2e/security.mjs` | 27 kontrol (koşul kabulü olmadan kayıt reddi dahil) |

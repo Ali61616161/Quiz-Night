@@ -32,3 +32,10 @@
 - Arayüz dili: `I18nBoot` + çalışma zamanı DOM çevirisi (`i18n/dict.ts`, ~700 satır + dinamik kalıplar). Varsayılan Türkçe; seçim `localStorage`'da; oyun İngilizce açıldıysa ve kullanıcı seçim yapmadıysa TV/telefonlar otomatik geçer. TV'de düğme yok.
 - Ekip: sahip host davet edebilir (şifre belirleme bağlantısı e-postayla); host oyun açar, abonelik/marka/davet/lig kapatma yalnızca sahibe.
 - Dağıtım: Dockerfile (standalone çıktı), docker-compose, SUNUM.md.
+
+## Eğlence turları ve sözleşme akışı
+- Yeni tur türleri (`streak`, `silent`, `bluff`, `funny`) mevcut soru-başına-durum makinesine oturur: oylamalı turlarda `question_locked` aşaması oylama süresine (25 sn) dönüşür; süre dolunca `tick()` cevaba ilerletir. Oylama seçenekleri (`pool`) kilitlenirken kurulur; yazarlar cevap aşamasına kadar yalnız sunucuda bilinir.
+- Saçma/sahte cevaplar TV'de görüneceği için takım adı küfür filtresinden geçer ve 80 karaktere kırpılır.
+- Eğlence içeriği ana `BANK`'tan ayrı `FUN_BANK`'tır; yalnızca `cats` belirten tur kutularına girer (klasik gecelerde çıkmaz, 250/konu sayımı bozulmaz).
+- Kayıtta koşulların/KVKK/veri işleme sözleşmesinin açık kabulü (`acceptTerms`) zorunludur ve sürüm+zaman kullanıcıya yazılır; ücretli planda ön bilgilendirme onayı (`acceptSale`) ayrıca istenir. Hukuki metin sürümü `LEGAL_VERSION`.
+- Hesap silinirken fatura kayıtları yasal saklama için `retainedInvoices` altında ayrı tutulur.

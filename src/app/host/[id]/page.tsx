@@ -1,4 +1,6 @@
 "use client";
+import { ROUND_NAME, ROUND_RULE, type RevealEntry } from "@/lib/roundInfo";
+import { RevealList } from "@/components/RevealList";
 import { announceGameLang } from "@/components/I18n";
 import { use, useEffect, useMemo, useState } from "react";
 import { Pul } from "@/components/Pul";
@@ -18,7 +20,7 @@ interface HostTeam {
 interface HostView {
   serverNow: number; id: string; tvToken: string; code: string; phase: Phase; mode: string; openedAt: number | null; deadline: number | null; paused: boolean; autoHost: boolean; kicked?: boolean; otherHostActive?: boolean; voided: boolean;
   allowedModes: string[]; settings: { points: number; wrongPenalty: number; durationMs: number; lockFirst: boolean; teamMax: number; teamMode: string; individualAgg: string; speedBonus: boolean };
-  question: null | { index: number; total: number; text: string | null; correct?: string; round: string; roundLabel: string };
+  question: null | { index: number; total: number; text: string | null; correct?: string; round: string; roundLabel: string; reveal?: RevealEntry[] | null };
   teams: { id: string; score: number; rank: number }[];
   teamDetails: HostTeam[]; coach: { do: string; say: string }; answeredCount: number;
   appeals: { id: string; teamId: string; team: string; note: string }[];
@@ -85,9 +87,11 @@ export default function HostPage({ params }: { params: Promise<{ id: string }> }
 
       {view.question && view.phase !== "lobby" && (
         <section className="alan">
-          <p style={{ margin: 0, opacity: .8 }}>Soru {view.question.index + 1}/{view.question.total} · {view.question.roundLabel} · mod: {MODES[view.mode] ?? view.mode}{view.question.round !== "all" ? ` · ${view.question.round === "speed" ? "hız" : "bahis"}` : ""}</p>
+          <p style={{ margin: 0, opacity: .8 }}>Soru {view.question.index + 1}/{view.question.total} · {view.question.roundLabel} · mod: {MODES[view.mode] ?? view.mode}{view.question.round !== "all" ? ` · ${ROUND_NAME[view.question.round] ?? ""}` : ""}</p>
           <p style={{ margin: ".25rem 0", fontSize: "1.25rem", fontWeight: 700 }}>{view.question.text}</p>
-          <p style={{ margin: 0, color: "var(--lamba)" }}>Doğru cevap: {view.question.correct}</p>
+          {ROUND_RULE[view.question.round] && <p style={{ margin: ".25rem 0" }}><strong>{ROUND_NAME[view.question.round]}:</strong> {ROUND_RULE[view.question.round]}</p>}
+          <p style={{ margin: 0, color: "var(--lamba)" }}>{view.question.round === "funny" ? "En çok oy alan" : "Doğru cevap"}: {view.question.correct}</p>
+          {view.question.reveal && <RevealList entries={view.question.reveal as RevealEntry[]} />}
           <div style={{ marginTop: ".75rem" }}><Sure openedAt={view.openedAt} deadline={view.deadline} active={view.phase === "question_open"} serverNow={serverNow} /></div>
           {view.phase === "question_open" && <p style={{ margin: ".5rem 0 0" }}>{view.answeredCount}/{view.teamDetails.length} takım cevapladı</p>}
           {view.voided && <p role="status" style={{ margin: ".5rem 0 0" }}>Bu soru iptal edildi, puanlar sayılmıyor.</p>}

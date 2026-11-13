@@ -34,6 +34,17 @@ Sıfırdan: `cp .env.example .env.local` ve değerleri doldur. Yalnızca `npm ru
 
 Belgeler: `SUNUM.md` (mekanlara nasıl sunulur), `DESIGN.md`, `DECISIONS.md`, `DEPLOY.md`, `KNOWN_LIMITS.md`, `TEST_REPORT.md`.
 
+## Eğlence turları
+Gece şablonlarında (Eğlence gecesi, Zamana karşı seri, Sessiz gece, Saçma cevap, Sahte cevap, Tahmin yarışı, Emoji tahmini) ve aralara eklenebilen turlar:
+- **Zamana karşı seri:** her soruda süre 2 sn kısalır (en az 8 sn); art arda doğru bilen takım ×1,25 / ×1,5 / ×1,75 / ×2 çarpan kazanır.
+- **Sessiz tur:** konuşmak yasak; çoğunluk modu zorlanır, süre en çok 20 sn.
+- **Sahte cevap (Pro+):** takımlar gerçeğe benzeyen yalan cevap yazar; karışık listeden gerçeği bulana puan, cevabına kananlar yazara yarım puan.
+- **Saçma cevap (Başlangıç+):** doğru cevap yok; takımlar komik cevap yazar, birbirlerinin cevabına oy verir (oy başına yarım puan).
+- **Tahmin yarışı:** en yakın tahmin kazanır, tam isabet ×1,5.
+- **Emoji tahmini:** film, animasyon, dizi, ülke.
+- **Joker ve sabotaj:** her takım oyun başına bir joker (×2 ya da yarı yarıya) ve bir sabotaj (rakibin o soruda kazancı yarıya iner) kullanır.
+İçerik `src/lib/content/fun.ts` içindedir (ana havuzdan ayrıdır, klasik gecelerde çıkmaz); hepsinin İngilizcesi vardır.
+
 ## Dil (Türkçe / English)
 Sağ üstteki **TR | EN** düğmesi tüm arayüzü değiştirir (kayıtlı tercih; oyun İngilizce açıldıysa TV ve telefonlar otomatik İngilizceye geçer). Soru havuzu tektir ve iki dillidir: her sorunun, şıklarıyla birlikte birebir İngilizce karşılığı vardır; oyuncu, host ve TV kendi dilini ayrı seçebilir, sorular aynı sıra ve aynı doğru cevapla o dile döner (cevaplar sunucuda tek dile çevrilerek değerlendirilir).
 

@@ -48,3 +48,12 @@ describe("arayüz çevirisi", () => {
   });
   it("t() altyapısı eksik anahtarda Türkçeye düşer", () => { expect(t("play.lock", "en")).toBe("Lock answer"); expect(t("yok.anahtar", "en")).toBe("yok.anahtar"); });
 });
+
+import { LEGAL } from "@/lib/legal";
+describe("hukuki metinlerin İngilizcesi", () => {
+  it("her başlık ve paragrafın İngilizce karşılığı var", () => {
+    const miss: string[] = [];
+    for (const d of Object.values(LEGAL)) for (const x of [d.title, ...d.sections.flatMap((s) => [s.h, s.p])]) if (translate(x) === x) miss.push(x.slice(0, 60));
+    expect(miss).toEqual([]);
+  });
+});

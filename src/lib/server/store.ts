@@ -1,6 +1,6 @@
 import { advance } from "@/lib/engine/game";
 import { AUTO_DELAY } from "@/lib/engine/machine";
-import { tick } from "@/lib/engine/game";
+import { isVoteQuestion, tick } from "@/lib/engine/game";
 import type { Game } from "@/lib/engine/types";
 import { onGameEvent } from "./venue";
 
@@ -48,7 +48,8 @@ export function notify(id: string) {
 function scheduleLock(game: Game) {
   const old = hub.timers.get(game.id);
   if (old) clearTimeout(old);
-  if (game.phase !== "question_open" || game.deadline === null) return;
+  const voting = game.phase === "question_locked" && isVoteQuestion(game) && game.deadline !== null;
+  if ((game.phase !== "question_open" && !voting) || game.deadline === null) return;
   hub.timers.set(game.id, setTimeout(() => {
     if (tick(game, Date.now())) afterChange(game); else scheduleLock(game);
   }, Math.max(0, game.deadline - Date.now()) + 20));
@@ -59,6 +60,7 @@ function scheduleAuto(game: Game) {
   if (old) clearTimeout(old);
   hub.auto.delete(game.id);
   if (!game.autoHost || game.paused || game.phase === "final" || game.phase === "lobby" || game.phase === "question_open") return;
+  if (game.phase === "question_locked" && isVoteQuestion(game)) return; // oylama süresi dolunca tick() ilerletir
   const delay = AUTO_DELAY[game.phase] ?? 5000;
   const wagerWait = game.phase === "round_intro" && ["wager", "final"].includes(game.questions[game.qIndex]?.round ?? "all") ? 12000 : 0;
   hub.auto.set(game.id, setTimeout(() => {

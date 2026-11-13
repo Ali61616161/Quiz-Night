@@ -1,4 +1,6 @@
 "use client";
+import { ROUND_NAME, ROUND_RULE, VOTE_PROMPT, type RevealEntry } from "@/lib/roundInfo";
+import { RevealList } from "@/components/RevealList";
 import { announceGameLang } from "@/components/I18n";
 import { use, useCallback, useEffect, useRef, useState } from "react";
 import { Flip } from "@/components/Flip";
@@ -19,14 +21,16 @@ interface PView {
   serverNow: number; venueName: string; phase: string; mode: "captain" | "majority" | "individual"; openedAt: number | null; deadline: number | null;
   brand: Brand | null; watermark: boolean; paused: boolean;
   question: null | { index: number; total: number; category: string; kind: "open" | "choice" | "ordering" | "matching" | "estimate"; round: string; roundNo: number; roundLabel: string;
-    text: string | null; image: string | null; options: string[] | null; items: string[] | null; left: string[] | null; right: string[] | null; correct?: string; explanation?: string | null };
+    text: string | null; image: string | null; options: string[] | null; items: string[] | null; left: string[] | null; right: string[] | null; correct?: string; explanation?: string | null; reveal?: RevealEntry[] | null };
   teams: { id: string; rank: number; name: string; color: string; emoji: string; score: number }[];
   me: null | {
     teamId: string; teamCode: string; nickname: string; isCaptain: boolean; captainName: string; captainOnline: boolean; canClaim: boolean;
     members: { id: string; nickname: string; online: boolean; captain: boolean }[];
     answer: { value: string; locked: boolean } | null;
     suggestions: { memberId: string; value: string; nickname: string }[]; votes: Record<string, number>; mySuggestion: string | null;
-    wager: number | null; wagerMax: number; jokerAvailable: boolean; jokerActive: boolean;
+    wager: number | null; wagerMax: number; jokerAvailable: boolean; jokerActive: boolean; jokerKind: "double" | "fifty" | null;
+    sabotageAvailable: boolean; sabotageTarget: string | null; rivals: { id: string; name: string }[]; streak: number;
+    vote: { choices: { id: string; text: string; own: boolean }[]; picked: string | null } | null;
     result: { correct: boolean; gained: number; fraction?: number } | null; appealed: boolean; voided: boolean;
   };
 }
@@ -143,13 +147,13 @@ function Join({ code, onJoined }: { code: string; onJoined: (s: Saved) => void }
         )}
         {err && <p role="alert" style={{ margin: 0, color: "#ffb4a6" }}>{err}</p>}
         <button className="btn" disabled={busy || !nickname || (mode === "join" && !teamRef)} style={{ minHeight: 56 }}>{mode === "create" ? "Takımını kur" : "Takıma katıl"}</button>
+        <p style={{ margin: 0, fontSize: ".85rem", opacity: .8 }}>Katılarak 18 yaş ve üzeri olduğunu belirtirsin. Yalnızca takma adın ve cevapların oyun için kullanılır. <a href="/kvkk" target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>Aydınlatma metni</a></p>
       </form>
     </main>
   );
 }
 
 const newKey = () => crypto.randomUUID();
-const ROUND_NAME: Record<string, string> = { all: "", speed: "Hız turu", wager: "Bahis turu", final: "Final sorusu" };
 
 function Play({ saved, onLeave }: { saved: Saved; onLeave: () => void }) {
   const { view, connected, serverNow } = useGameStream<PView>(saved.gameId, "player", saved.memberToken);
@@ -231,6 +235,7 @@ function Play({ saved, onLeave }: { saved: Saved; onLeave: () => void }) {
           <>
             <h1 style={{ fontSize: "2.4rem" }}>{q.roundLabel || "Hazır ol"}</h1>
             {ROUND_NAME[q.round] && <p style={{ fontSize: "1.2rem" }}>{ROUND_NAME[q.round]}</p>}
+            {ROUND_RULE[q.round] && <p className="fis" style={{ margin: 0 }}>{ROUND_RULE[q.round]}</p>}
             {isWager && (
               <div className="fis">
                 <p style={{ margin: 0 }}>Soruyu görmeden bahis yap. En çok {me.wagerMax} puan. Doğruysa kazanırsın, yanlışsa kaybedersin.</p>
@@ -251,11 +256,25 @@ function Play({ saved, onLeave }: { saved: Saved; onLeave: () => void }) {
             <p style={{ margin: 0, opacity: .85 }}>Soru {q.index + 1}/{q.total} · {q.category}{ROUND_NAME[q.round] ? ` · ${ROUND_NAME[q.round]}` : ""}</p>
             <h2 style={{ fontSize: "1.9rem", lineHeight: 1.2, margin: ".4rem 0 .8rem" }}>{q.text}</h2>
             {q.image && /* eslint-disable-next-line @next/next/no-img-element */ <img src={q.image} alt="" style={{ maxWidth: "100%", borderRadius: 6, marginBottom: ".6rem" }} loading="lazy" />}
+            {open && q.round === "silent" && <p role="status" className="fis" style={{ margin: "0 0 .5rem", fontWeight: 800 }}>🤫 Sessiz tur: konuşmak yok!</p>}
+            {open && q.round === "streak" && <p role="status" style={{ margin: "0 0 .5rem", fontWeight: 700 }}>🔥 Serin: {me.streak} · çarpan ×{(1 + 0.25 * Math.min(me.streak, 4)).toString().replace(".", ",")}</p>}
             {open && <Sure openedAt={view.openedAt} deadline={view.deadline} active serverNow={serverNow} />}
-            {view.phase === "question_locked" && <p>Süre doldu. Cevap bekleniyor.</p>}
+            {view.phase === "question_locked" && !me.vote && <p>Süre doldu. Cevap bekleniyor.</p>}
+            {view.phase === "question_locked" && me.vote && (
+              <div style={{ display: "grid", gap: ".5rem" }}>
+                <Sure openedAt={view.openedAt} deadline={view.deadline} active serverNow={serverNow} />
+                <p style={{ margin: 0, fontWeight: 700 }}>{VOTE_PROMPT[q.round]}</p>
+                {me.vote.choices.map((c) => (
+                  <button key={c.id} className={`btn ${me.vote!.picked === c.id ? "" : "btn-fis"}`} style={{ justifyContent: "flex-start", minHeight: 56, textAlign: "left" }} disabled={busy || c.own} aria-pressed={me.vote!.picked === c.id}
+                    onClick={() => act({ type: "pick", id: c.id })}>{me.vote!.picked === c.id ? "● " : "○ "}{c.text}{c.own ? " (senin cevabın)" : ""}</button>
+                ))}
+                {me.vote.picked && <p role="status" style={{ margin: 0 }}>Oyun kaydedildi. Süre bitene kadar değiştirebilirsin.</p>}
+              </div>
+            )}
             {(view.phase === "answer_reveal" || view.phase === "scoreboard") && (
               <div className="fis" style={{ marginTop: ".5rem" }}>
-                <p style={{ margin: 0 }}>Doğru cevap: <strong>{q.correct}</strong></p>
+                <p style={{ margin: 0 }}>{q.round === "funny" ? "En çok oy alan" : "Doğru cevap"}: <strong>{q.correct}</strong></p>
+                {q.reveal && <RevealList entries={q.reveal} />}
                 {q.explanation && <p style={{ margin: ".3rem 0 0" }}>{q.explanation}</p>}
                 <p style={{ margin: ".5rem 0 0", fontWeight: 700 }}>
                   {me.voided ? "Bu soru hatalı bulundu, puanlar iptal." : me.result ? (view.mode === "individual" && me.result.fraction !== undefined ? `Takımın %${Math.round(me.result.fraction * 100)} doğru, ${me.result.gained} puan.` : me.result.correct ? `✔ Takımın doğru bildi, ${me.result.gained} puan.` : `✘ Takımın bilemedi${me.result.gained < 0 ? `, ${me.result.gained} puan` : ""}.`) : ""}
@@ -306,9 +325,17 @@ function Play({ saved, onLeave }: { saved: Saved; onLeave: () => void }) {
           <div style={{ display: "flex", gap: ".5rem" }}>
             {(q.kind === "open" || q.kind === "estimate") && <button className="btn btn-ghost" disabled={busy || inputDisabled || !draft} onClick={() => submit(draft, false)}>{canLock ? "Cevabı gönder" : view.mode === "majority" ? "Oyumu gönder" : view.mode === "individual" ? "Cevabımı gönder" : "Öneriyi gönder"}</button>}
             {canLock && !speed && <button className="btn" style={{ flex: 1, minHeight: 56 }} disabled={busy || locked || !shown} onClick={() => submit(shown, true)}>{locked ? "Cevap kilitlendi" : "Cevabı kilitle"}</button>}
-            {me.isCaptain && me.jokerAvailable && !me.jokerActive && !locked && <button className="btn btn-ghost" disabled={busy} onClick={() => act({ type: "joker" })}>Joker</button>}
+            {me.isCaptain && me.jokerAvailable && !me.jokerActive && !locked && <button className="btn btn-ghost" disabled={busy} onClick={() => act({ type: "joker", kind: "double" })}>Joker ×2</button>}
+            {me.isCaptain && me.jokerAvailable && !me.jokerActive && !locked && q.kind === "choice" && <button className="btn btn-ghost" disabled={busy} onClick={() => act({ type: "joker", kind: "fifty" })}>Yarı yarıya</button>}
           </div>
-          {me.jokerActive && <p role="status" style={{ margin: 0 }}>Joker açık: bu soruda puan ×2.</p>}
+          {me.jokerActive && <p role="status" style={{ margin: 0 }}>{me.jokerKind === "fifty" ? "Yarı yarıya açık: iki şık elendi." : "Joker açık: bu soruda puan ×2."}</p>}
+          {me.isCaptain && me.sabotageAvailable && me.rivals.length > 0 && !me.sabotageTarget && (
+            <details><summary style={{ cursor: "pointer", minHeight: 44 }}>Sabotaj (oyunda bir kez)</summary>
+              <p style={{ margin: ".3rem 0" }}>Seçtiğin takımın bu sorudaki puanı yarıya iner.</p>
+              <div style={{ display: "flex", gap: ".4rem", flexWrap: "wrap" }}>{me.rivals.map((r) => <button key={r.id} className="btn btn-ghost" disabled={busy} onClick={() => act({ type: "sabotage", target: r.id })}>{r.name}</button>)}</div>
+            </details>
+          )}
+          {me.sabotageTarget && <p role="status" style={{ margin: 0 }}>Sabotaj yapıldı: {me.sabotageTarget} takımının bu soruda kazancı yarıya inecek.</p>}
           {locked && <p role="status" style={{ margin: 0 }}>Cevap kilitlendi, değişiklik yapılamaz.</p>}
           {!locked && canLock && me.answer && <p role="status" style={{ margin: 0 }}>Cevap gönderildi. Kilitleyene kadar değiştirebilirsin.</p>}
           {!canLock && me.mySuggestion && <p role="status" style={{ margin: 0 }}>{view.mode === "individual" ? "Cevabın kaydedildi." : view.mode === "majority" ? "Oyun kaydedildi." : "Önerin kaptana gitti."} Süre bitene kadar değiştirebilirsin.</p>}

@@ -3,7 +3,7 @@ import path from "node:path";
 import type { PlanId } from "@config/plans";
 import type { Brand, Question } from "@/lib/engine/types";
 
-export interface User { id: string; email: string; salt: string; hash: string; verified: boolean; verifyToken: string | null; venueId: string; role: "owner" | "host"; createdAt: number; resetToken?: string | null; resetExp?: number }
+export interface User { id: string; email: string; salt: string; hash: string; verified: boolean; verifyToken: string | null; venueId: string; role: "owner" | "host"; createdAt: number; termsAt?: number; termsVersion?: string; resetToken?: string | null; resetExp?: number }
 export interface Schedule { id: string; title: string; weekday: number; time: string; remindEmail: boolean; lastReminded?: string }
 export interface GameRecord {
   gameId: string; at: number; teams: number; players: number; ranking: { name: string; score: number }[];
@@ -28,7 +28,7 @@ export interface QReport { id: string; at: number; questionId: string; venueId: 
 export interface DB {
   users: Record<string, User>; venues: Record<string, Venue>; coupons: Record<string, Coupon>;
   abuse: AbuseFlag[]; reports: QReport[]; audit: { at: number; who: string; what: string }[];
-  qstats: Record<string, { n: number; ok: number }>; drafts: Question[]; globalQuestions: Question[]; diffOverrides: Record<string, 1 | 2 | 3>; announcement: string;
+  qstats: Record<string, { n: number; ok: number }>; drafts: Question[]; globalQuestions: Question[]; diffOverrides: Record<string, 1 | 2 | 3>; announcement: string; retainedInvoices?: { venue: string; billing: unknown; invoices: unknown[]; deletedAt: number }[];
   mailLog: { at: number; to: string; subject: string; body: string }[];
 }
 

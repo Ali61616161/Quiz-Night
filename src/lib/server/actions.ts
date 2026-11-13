@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   adjustScore, advance, appeal, claimCaptain, createTeam, extendTime, GameError, handOverCaptain, heartbeat, joinTeam,
-  kickTeam, overrideTeam, rotateTvToken, placeWager, renameTeam, setMode, submitAnswer, suggest, activateJoker, voidQuestion,
+  kickTeam, overrideTeam, rotateTvToken, placeWager, renameTeam, setMode, submitAnswer, suggest, activateJoker, voidQuestion, pickEntry, sabotageTeam,
 } from "@/lib/engine/game";
 import type { Game } from "@/lib/engine/types";
 import { audit, db, save } from "./db";
@@ -31,7 +31,9 @@ const playerAction = z.discriminatedUnion("type", [
   z.object({ type: z.literal("handover"), to: z.string().max(20) }),
   z.object({ type: z.literal("heartbeat"), hidden: z.boolean().optional() }),
   z.object({ type: z.literal("wager"), amount: z.number().int() }),
-  z.object({ type: z.literal("joker") }),
+  z.object({ type: z.literal("joker"), kind: z.enum(["double", "fifty"]).optional() }),
+  z.object({ type: z.literal("sabotage"), target: z.string().max(40) }),
+  z.object({ type: z.literal("pick"), id: z.string().max(10) }),
   z.object({ type: z.literal("appeal"), note: z.string().max(120).default("") }),
 ]);
 
@@ -89,7 +91,9 @@ export function runPlayerAction(game: Game, memberToken: string, raw: unknown) {
     case "handover": handOverCaptain(game, memberToken, a.to); break;
     case "heartbeat": heartbeat(game, memberToken, now, a.hidden); if (!a.hidden) return; break;
     case "wager": placeWager(game, memberToken, a.amount); break;
-    case "joker": activateJoker(game, memberToken); break;
+    case "joker": activateJoker(game, memberToken, a.kind ?? "double"); break;
+    case "sabotage": sabotageTeam(game, memberToken, a.target); break;
+    case "pick": pickEntry(game, memberToken, a.id, now); break;
     case "appeal": appeal(game, memberToken, a.note); break;
   }
   afterChange(game);

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { coach } from "./machine";
 import { isOnline, ranking } from "./game";
 import { localizeValue, type Lang } from "./scoring";
-import type { Game, Phase, Question, QuestionEn } from "./types";
+import { VOTE_ROUNDS, type Game, type Phase, type Question, type QuestionEn, type RoundType } from "./types";
 
 const REVEALED: Phase[] = ["answer_reveal", "scoreboard", "final"];
 
@@ -23,6 +23,27 @@ function correctText(q: Question, L: QuestionEn | null): string {
   return L?.correct ?? q.correct;
 }
 
+const isVote = (q: Question) => (VOTE_ROUNDS as readonly RoundType[]).includes(q.round ?? "all");
+const teamName = (g: Game, id: string) => g.teams.find((t) => t.id === id)?.name ?? "?";
+const hashN = (s: string) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const poolText = (q: Question, e: { text: string; truth: boolean }, L: QuestionEn | null) => (e.truth ? L?.correct ?? q.correct : e.text);
+
+/** Yarı yarıya jokeri: doğru şık + bir yanlış şık kalır (deterministik). Geri dönen dizi orijinal şık sıralarını tutar. */
+function fiftyKeep(g: Game, q: Question, teamId: string): Set<number> | null {
+  if (g.jokerKind[teamId] !== "fifty" || !g.jokerActive[teamId] || q.kind !== "choice" || !q.options) return null;
+  const ci = q.options.indexOf(q.correct);
+  const wrong = q.options.map((_, i) => i).filter((i) => i !== ci);
+  return new Set([ci, wrong[hashN(`${g.id}:${q.id}:${teamId}`) % wrong.length]]);
+}
+
+function voteReveal(g: Game, q: Question, L: QuestionEn | null) {
+  return g.pool.map((e) => ({
+    text: poolText(q, e, L), truth: e.truth,
+    authors: e.teamIds.map((id) => teamName(g, id)),
+    pickedBy: Object.entries(g.picks).filter(([, id]) => id === e.id).map(([tid]) => teamName(g, tid)),
+  }));
+}
+
 function questionView(g: Game, forHost: boolean, lang: Lang) {
   const q = g.questions[g.qIndex];
   if (!q || g.phase === "lobby") return null;
@@ -33,15 +54,24 @@ function questionView(g: Game, forHost: boolean, lang: Lang) {
   const itemsPerm = q.kind === "ordering" ? shuffleIdx(q.items!.length, seed) : [];
   const rightPerm = q.kind === "matching" ? shuffleIdx(q.pairs!.length, seed) : [];
   const items = L?.items ?? q.items, pairs = L?.pairs ?? q.pairs;
+  const vote = isVote(q);
+  const voting = vote && ["question_locked", "answer_reveal", "scoreboard", "final"].includes(g.phase);
+  const reveal = vote && REVEALED.includes(g.phase) ? voteReveal(g, q, L) : null;
+  let correct = correctText(q, L);
+  if (vote && q.round === "funny") {
+    const top = reveal ? Math.max(0, ...reveal.map((r) => r.pickedBy.length)) : 0;
+    correct = reveal && top > 0 ? reveal.filter((r) => r.pickedBy.length === top).map((r) => `${r.text} (${r.authors.join(", ")})`).join(" · ") : "—";
+  }
   return {
-    index: g.qIndex, total: g.questions.length, category: q.category, kind: q.kind, round: q.round ?? "all",
+    index: g.qIndex, total: g.questions.length, category: q.category, kind: voting ? "choice" : q.kind === "freeform" ? "open" : q.kind, round: q.round ?? "all",
     roundNo: q.roundNo ?? 1, roundLabel: q.roundLabel ?? "",
     text: visible ? L?.text ?? q.text : null, image: visible ? q.image ?? null : null,
-    options: visible && q.kind === "choice" ? L?.options ?? q.options ?? null : null,
+    options: voting ? g.pool.map((e) => poolText(q, e, L)) : visible && q.kind === "choice" ? L?.options ?? q.options ?? null : null,
+    reveal,
     items: visible && q.kind === "ordering" ? itemsPerm.map((i) => items![i]) : null,
     left: visible && q.kind === "matching" ? pairs!.map((p) => p[0]) : null,
     right: visible && q.kind === "matching" ? rightPerm.map((i) => pairs![i][1]) : null,
-    ...(revealed ? { correct: correctText(q, L), explanation: L?.explanation ?? q.explanation ?? null } : {}),
+    ...(revealed ? { correct, explanation: L?.explanation ?? q.explanation ?? null } : {}),
   };
 }
 
@@ -68,6 +98,9 @@ export const tvView = (g: Game, now: number, lang: Lang = "tr") => base(g, now, 
 export function playerView(g: Game, memberToken: string | null, now: number, lang: Lang = "tr") {
   const b = base(g, now, lang);
   const cq = g.questions[g.qIndex];
+  const mine = memberToken ? g.teams.find((t) => t.members.some((m) => m.token === memberToken)) : undefined;
+  const keep = mine && cq ? fiftyKeep(g, cq, mine.id) : null;
+  if (keep && b.question?.options && g.phase === "question_open") b.question = { ...b.question, options: b.question.options.filter((_, i) => keep.has(i)) };
   const loc = (v: string) => (cq ? localizeValue(cq, v, lang) : v);
   let me = null;
   if (memberToken) {
@@ -92,7 +125,14 @@ export function playerView(g: Game, memberToken: string | null, now: number, lan
         votes: g.mode === "majority" ? Object.values(sugg).reduce<Record<string, number>>((a, s) => { a[loc(s.value)] = (a[loc(s.value)] ?? 0) + 1; return a; }, {}) : {},
         mySuggestion: own === null ? null : loc(own),
         wager: g.wagers[team.id] ?? null, wagerMax: Math.max(team.score, 50),
-        jokerAvailable: !g.jokersUsed.includes(team.id), jokerActive: Boolean(g.jokerActive[team.id]),
+        jokerAvailable: !g.jokersUsed.includes(team.id), jokerActive: Boolean(g.jokerActive[team.id]), jokerKind: g.jokerKind[team.id] ?? null,
+        sabotageAvailable: !g.sabotageUsed.includes(team.id), sabotageTarget: g.sabotage[team.id] ? teamName(g, g.sabotage[team.id]) : null,
+        rivals: g.teams.filter((t) => t.id !== team.id).map((t) => ({ id: t.id, name: t.name })),
+        streak: cq?.round === "streak" ? g.streakBase[team.id] ?? 0 : 0,
+        vote: g.phase === "question_locked" && cq && isVote(cq) ? {
+          choices: g.pool.map((e) => ({ id: e.id, text: poolText(cq, e, lang === "en" && cq.en ? cq.en : null), own: e.teamIds.includes(team.id) })),
+          picked: g.picks[team.id] ?? null,
+        } : null,
         result: REVEALED.includes(g.phase) ? g.results[team.id] ?? null : null,
         appealed: g.appeals.some((a) => a.teamId === team.id && a.qIndex === g.qIndex),
         voided: g.voided && REVEALED.includes(g.phase),

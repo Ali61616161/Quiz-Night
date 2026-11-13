@@ -51,6 +51,10 @@ const PATTERNS: [RegExp, string][] = [
   [/^Bu (.*) sundu$/, "$1 presents"],
   [/^(.*) oyununa katılmak için QR kod$/, "QR code to join the $1 game"],
   [/^Takım: (.*) · kod (.*)$/, "Team: $1 · code $2"],
+  [/^(·\s*)?Seçenler \((\d+)\): (.*)$/, "$1Picked by ($2): $3"],
+  [/^(·\s*)?Yazan: (.*)$/, "$1Written by: $2"],
+  [/^🔥 Serin: (\d+) · çarpan ×(.*)$/, "🔥 Your streak: $1 · multiplier ×$2"],
+  [/^Sabotaj yapıldı: (.*) takımının bu soruda kazancı yarıya inecek\.$/, "Sabotage placed: $1 will earn half the points on this question."],
 ];
 
 const cache = new Map<string, string>();
@@ -62,6 +66,13 @@ export function translate(s: string): string {
   if (hit !== undefined) return m[1] + hit + m[3];
   let out = UI_DICT.get(core);
   if (out === undefined) for (const [re, rep] of PATTERNS) if (re.test(core)) { out = core.replace(re, rep); break; }
+  // "Soru 3/30 · Kategori · Tur adı" gibi " · " ile birleşik metinler: parçaları tek tek çevir
+  if ((out === undefined || out === core || / · /.test(out)) && core.includes("·")) {
+    const lead = core.startsWith("·") ? "· " : "";
+    const parts = core.replace(/^·\s*/, "").split(" · ").map((x) => { const t = x.trim(); const m2 = t.match(/^(Soru) (\d+)\/(\d+)$/); return m2 ? `Question ${m2[2]}/${m2[3]}` : UI_DICT.get(t) ?? t; });
+    const joined = lead + parts.join(" · ");
+    if (joined !== core) out = joined;
+  }
   if (out === undefined) out = core;
   if (cache.size < 5000) cache.set(core, out);
   return m[1] + out + m[3];

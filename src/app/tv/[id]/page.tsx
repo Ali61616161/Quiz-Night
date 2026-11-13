@@ -1,4 +1,6 @@
 "use client";
+import { ROUND_NAME, ROUND_RULE, VOTE_PROMPT, type RevealEntry } from "@/lib/roundInfo";
+import { RevealList } from "@/components/RevealList";
 import { announceGameLang } from "@/components/I18n";
 import { use, useEffect, useRef, useState } from "react";
 import { Flip } from "@/components/Flip";
@@ -14,10 +16,10 @@ interface TvTeam { id: string; rank: number; name: string; color: string; emoji:
 interface TvView {
   serverNow: number; code: string; venueName: string; phase: string; mode: string; openedAt: number | null; deadline: number | null; brand: BrandView | null; watermark: boolean; paused: boolean;
   question: null | { index: number; total: number; category: string; kind: string; round: string; roundNo: number; roundLabel: string; text: string | null; image: string | null;
-    options: string[] | null; items: string[] | null; left: string[] | null; right: string[] | null; correct?: string; explanation?: string | null };
+    options: string[] | null; items: string[] | null; left: string[] | null; right: string[] | null; correct?: string; explanation?: string | null; reveal?: RevealEntry[] | null };
   teams: TvTeam[];
 }
-const ROUND_NAME: Record<string, string> = { all: "", speed: "Hız turu", wager: "Bahis turu", final: "Final sorusu" };
+
 const MODE_NAME: Record<string, string> = { captain: "Kaptan cevaplar", majority: "Masa oylar", individual: "Herkes ayrı cevaplar" };
 
 export default function TvPage({ params }: { params: Promise<{ id: string }> }) {
@@ -88,7 +90,7 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
         <section>
           <h2 style={{ fontSize: "clamp(48px, 7vw, 130px)" }}>{q?.roundLabel || "Hazır olun"}</h2>
           {q && ROUND_NAME[q.round] && <p className="display" style={{ fontSize: "clamp(28px, 3vw, 56px)", color: "var(--lamba)", margin: 0 }}>{ROUND_NAME[q.round]}</p>}
-          <p style={{ fontSize: "1.4em" }}>{q && (q.round === "wager" || q.round === "final") ? "Soruyu görmeden bahsinizi girin." : `${MODE_NAME[view.mode]}. Masada konuşabilirsiniz.`}</p>
+          <p style={{ fontSize: "1.4em" }}>{q && (q.round === "wager" || q.round === "final") ? "Soruyu görmeden bahsinizi girin." : q && ROUND_RULE[q.round] ? ROUND_RULE[q.round] : `${MODE_NAME[view.mode]}. Masada konuşabilirsiniz.`}</p>
         </section>
       )}
 
@@ -98,7 +100,7 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
             <div className="fis">
               <p style={{ fontSize: "clamp(32px, 4.2vw, 72px)", lineHeight: 1.15, fontWeight: 700, margin: 0 }}>{q.text}</p>
               {q.image && /* eslint-disable-next-line @next/next/no-img-element */ <img src={q.image} alt="" style={{ maxHeight: "38vh", maxWidth: "100%", marginTop: "1rem", borderRadius: 6 }} />}
-              {q.options && (
+              {q.options && !q.reveal && (
                 <ol style={{ listStyle: "upper-alpha", fontSize: "clamp(24px, 2.8vw, 48px)", margin: "1rem 0 0", paddingLeft: "1.6em", display: "grid", gap: ".3rem" }}>
                   {q.options.map((o) => <li key={o} style={view.phase === "answer_reveal" && o === q.correct ? { fontWeight: 800, textDecoration: "underline" } : undefined}>{o}{view.phase === "answer_reveal" && o === q.correct ? " ✓" : ""}</li>)}
                 </ol>
@@ -110,12 +112,15 @@ export default function TvPage({ params }: { params: Promise<{ id: string }> }) 
                   <ul style={{ margin: 0, padding: 0, listStyle: "none", textAlign: "right" }}>{q.right.map((r) => <li key={r}>{r}</li>)}</ul>
                 </div>
               )}
-              {q.kind === "estimate" && <p style={{ margin: ".8rem 0 0", fontSize: "1.2em" }}>En yakın tahmin kazanır.</p>}
+              {q.kind === "estimate" && <p style={{ margin: ".8rem 0 0", fontSize: "1.2em" }}>En yakın tahmin kazanır, tam isabet bonus verir.</p>}
+              {q.round === "silent" && view.phase === "question_open" && <p role="status" style={{ margin: ".8rem 0 0", fontSize: "1.3em", fontWeight: 800 }}>🤫 Sessiz tur: konuşmak yok!</p>}
+              {view.phase === "question_locked" && VOTE_PROMPT[q.round] && <p role="status" style={{ margin: ".8rem 0 0", fontSize: "1.3em", fontWeight: 800 }}>{VOTE_PROMPT[q.round]}</p>}
             </div>
             {view.phase === "answer_reveal" ? (
               <div className="fis" style={{ background: "var(--lamba)" }}>
                 <p className="display" style={{ fontSize: "clamp(32px, 4vw, 72px)", margin: 0 }}>Doğru cevap: {q.correct}</p>
                 {q.explanation && <p style={{ margin: ".4rem 0 0", fontSize: "1.15em" }}>{q.explanation}</p>}
+                {q.reveal && <RevealList entries={q.reveal} big />}
               </div>
             ) : <Sure openedAt={view.openedAt} deadline={view.deadline} active={view.phase === "question_open"} serverNow={serverNow} big />}
             {view.phase === "question_open" && (

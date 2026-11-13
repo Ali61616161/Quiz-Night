@@ -22,9 +22,14 @@ export function allowedFor(plan: PlanId) {
   if (f.has("round_ordering")) kinds.add("ordering");
   if (f.has("round_matching")) kinds.add("matching");
   if (f.has("round_estimate")) kinds.add("estimate");
+  if (f.has("round_funny")) kinds.add("freeform");
   const rounds = new Set<RoundType>(["all"]);
   if (f.has("round_speed")) rounds.add("speed");
   if (f.has("round_wager")) { rounds.add("wager"); rounds.add("final"); }
+  if (f.has("round_streak")) rounds.add("streak");
+  if (f.has("round_silent")) rounds.add("silent");
+  if (f.has("round_funny")) rounds.add("funny");
+  if (f.has("round_bluff")) rounds.add("bluff");
   return { kinds, rounds, image: f.has("round_picture") };
 }
 

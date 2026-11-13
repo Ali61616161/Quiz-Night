@@ -62,11 +62,11 @@ await next(); await tv.waitForTimeout(900); await scan(tv, "board-tv", "tv-board
 
 // Mekan paneli ve admin
 const email = `i18n${Date.now()}@test.co`, pw = "cok-uzun-sifre-1";
-const su = await (await post("/api/auth/signup", { email, password: pw, venueName: "Test Cafe" })).json();
+const su = await (await post("/api/auth/signup", { email, password: pw, venueName: "Test Cafe", acceptTerms: true })).json();
 if (su.devVerifyUrl) {
   await fetch(su.devVerifyUrl.replace(/^https?:\/\/[^/]+/, BASE), { redirect: "manual" });
   const r = await post("/api/auth/login", { email, password: pw }); const cookie = r.headers.get("set-cookie").split(";")[0].split("=")[1];
-  await post("/api/billing/subscribe", { plan: "brand", cycle: "monthly", paymentToken: "tok_ok" }, { Cookie: `qh_session=${cookie}` });
+  await post("/api/billing/subscribe", { plan: "brand", cycle: "monthly", paymentToken: "tok_ok", acceptSale: true }, { Cookie: `qh_session=${cookie}` });
   const pp = await page(1100, 900, false, cookie); await pp.goto(BASE + "/panel"); await pp.waitForSelector("nav button");
   const tabs = await pp.locator("nav[aria-label] button").count();
   for (let i = 0; i < tabs; i++) { await pp.locator("nav[aria-label] button").nth(i).click(); await scan(pp, "panel-tab-" + i, i === 0 ? "panel" : i === 5 ? "panel-brand" : undefined); }

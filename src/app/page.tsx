@@ -9,6 +9,8 @@ const ROWS: [string, (p: (typeof PLANS)[keyof typeof PLANS]) => string][] = [
   ["AI soru kotası / ay", (p) => String(p.aiQuotaMonthly)],
   ["Mekan adı, logo, renk", (p) => (p.features.has("branding") ? "Var" : "Yok")],
   ["Lig ve sezon", (p) => (p.features.has("league") ? "Var" : "Yok")],
+  ["Eğlence turları (seri, sessiz, saçma cevap, emoji)", (p) => (p.features.has("round_funny") ? "Var" : "Yok")],
+  ["Sahte cevap turu", (p) => (p.features.has("round_bluff") ? "Var" : "Yok")],
 ];
 
 export default function Landing() {
@@ -54,7 +56,7 @@ export default function Landing() {
         <p style={{ opacity: .8 }}>Fiyatlar pilot sonrası güncellenecek.</p>
       </section>
 
-      <footer style={{ margin: "4rem 0 2rem", opacity: .85, display: "flex", gap: "1rem", flexWrap: "wrap" }}><span>© {BRAND.name}</span><a href="/gizlilik">Gizlilik</a><a href="/kvkk">KVKK</a><a href="/kosullar">Koşullar</a><a href="/cerez">Çerezler</a></footer>
+      <footer style={{ margin: "4rem 0 2rem", opacity: .85, display: "flex", gap: "1rem", flexWrap: "wrap" }}><span>© {BRAND.name}</span><a href="/gizlilik">Gizlilik</a><a href="/kvkk">KVKK</a><a href="/kosullar">Koşullar</a><a href="/sozlesme">Veri işleme sözleşmesi</a><a href="/satis">Ön bilgilendirme ve iade</a><a href="/cerez">Çerezler</a></footer>
     </main>
   );
 }

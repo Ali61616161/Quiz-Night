@@ -7,13 +7,14 @@ import { BRAND } from "@config/brand";
 function Form() {
   const r = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [accepted, setAccepted] = useState(false);
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [venueName, setVenueName] = useState("");
   const [err, setErr] = useState(""); const [info, setInfo] = useState(""); const [busy, setBusy] = useState(false);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(""); setInfo("");
     try {
       if (mode === "signup") {
-        const j = await api<{ devVerifyUrl?: string }>("/api/auth/signup", { email, password, venueName });
+        const j = await api<{ devVerifyUrl?: string }>("/api/auth/signup", { email, password, venueName, acceptTerms: accepted });
         setInfo("Doğrulama bağlantısı e-postana gönderildi. Bağlantıyı açtıktan sonra giriş yap." + (j.devVerifyUrl ? ` (Geliştirme: ${j.devVerifyUrl})` : ""));
         setMode("login");
       } else { await api("/api/auth/login", { email, password }); r.push("/panel"); }
@@ -46,13 +47,18 @@ function Form() {
         {mode === "signup" && <label style={{ display: "grid", gap: ".3rem" }}>Mekan adı<input className="input" value={venueName} onChange={(e) => setVenueName(e.target.value)} required minLength={2} maxLength={60} autoComplete="organization" /></label>}
         <label style={{ display: "grid", gap: ".3rem" }}>E-posta<input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" autoCapitalize="off" autoCorrect="off" spellCheck={false} /></label>
         <label style={{ display: "grid", gap: ".3rem" }}>Şifre{mode === "signup" && " (en az 10 karakter)"}<input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "signup" ? 10 : 1} autoComplete={mode === "signup" ? "new-password" : "current-password"} enterKeyHint="send" /></label>
+        {mode === "signup" && (
+          <label style={{ display: "flex", gap: ".6rem", alignItems: "flex-start", fontSize: ".95rem" }}>
+            <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} required style={{ width: 24, height: 24, marginTop: 2 }} />
+            <span><a href="/kosullar" target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>Kullanım koşulları</a>, <a href="/sozlesme" target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>veri işleme sözleşmesi</a> ve <a href="/kvkk" target="_blank" rel="noreferrer" style={{ color: "var(--lamba)" }}>KVKK aydınlatma metnini</a> okudum, kabul ediyorum.</span>
+          </label>
+        )}
         {err && <p role="alert" style={{ margin: 0, color: "#ffb4a6" }}>{err}</p>}
         {info && <p role="status" style={{ margin: 0, wordBreak: "break-all" }}>{info}</p>}
         <button className="btn" style={{ minHeight: 56 }} disabled={busy}>{mode === "login" ? "Giriş yap" : "Hesap oluştur"}</button>
       </form>
       {mode === "login" && <button className="btn btn-ghost" type="button" onClick={forgot}>Şifremi unuttum</button>}
       <button className="btn btn-ghost" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setErr(""); }}>{mode === "login" ? "Hesabın yok mu? Kayıt ol" : "Hesabın var mı? Giriş yap"}</button>
-      {mode === "signup" && <p style={{ fontSize: ".9rem", opacity: .85 }}>Kayıt olarak <a href="/kosullar" style={{ color: "var(--lamba)" }}>kullanım koşullarını</a> ve <a href="/kvkk" style={{ color: "var(--lamba)" }}>KVKK aydınlatma metnini</a> kabul edersin.</p>}
     </main>
   );
 }

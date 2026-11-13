@@ -30,6 +30,7 @@ import { ESTIMATES, ORDERINGS } from "./facts";
 import { ASK_EN, toEn } from "./en";
 import { estimates, expand, expandSingles, matchings, orderings, type EnHelper } from "./gen";
 import { SINGLES_EN, applyOverlay } from "./sets-en";
+import { FUN_BANK, FUN_CATS, FUN_CAT_SET } from "./fun";
 import { BILIM, BILIM_SINGLES } from "./sets/bilim";
 import { DIZIFILM, DIZIFILM_SINGLES } from "./sets/dizifilm";
 import { EDEBIYAT, EDEBIYAT_SINGLES } from "./sets/edebiyat";
@@ -121,10 +122,10 @@ export const BANK: Question[] = build();
 export function applyDifficultyOverrides(o: Record<string, 1 | 2 | 3>) { for (const q of BANK) if (o[q.id]) q.difficulty = o[q.id]; }
 export const bankById = new Map(BANK.map((q) => [q.id, q]));
 
-export type TemplateId = "classic" | "themed" | "quick" | "bilbakalim";
+export type TemplateId = "classic" | "themed" | "quick" | "bilbakalim" | "party" | "streak" | "silent" | "funny" | "bluff" | "guess" | "emoji";
 
-interface Slot { round: RoundType; label: string; kinds: Question["kind"][]; n: number }
-const R = (label: string, n: number, kinds: Question["kind"][], round: RoundType = "all"): Slot => ({ label, n, kinds, round });
+interface Slot { round: RoundType; label: string; kinds: Question["kind"][]; n: number; cats?: string[] }
+const R = (label: string, n: number, kinds: Question["kind"][], round: RoundType = "all", cats?: string[]): Slot => ({ label, n, kinds, round, cats });
 
 export const TEMPLATES: Record<TemplateId, { name: string; description: string; durationSec: number; slots: Slot[]; themed?: boolean }> = {
   classic: {
@@ -146,6 +147,21 @@ export const TEMPLATES: Record<TemplateId, { name: string; description: string; 
     name: "Bil Bakalım turu", description: "Kısa ve hızlı tek tur, aralara eklenir.", durationSec: 15,
     slots: [R("Bil Bakalım", 10, ["choice"], "speed")],
   },
+  party: {
+    name: "Eğlence gecesi", description: "Sessiz tur, emoji, zamana karşı seri, sahte cevap, saçma cevap ve tahmin yarışı bir arada.", durationSec: 25,
+    slots: [
+      R("Isınma", 4, ["choice"]), R("Sessiz tur", 4, ["choice"], "silent"), R("Emoji tahmini", 5, ["choice"], "all", [FUN_CATS.emoji]),
+      R("Zamana karşı seri", 8, ["choice"], "streak"), R("Sahte cevap", 3, ["open"], "bluff", [FUN_CATS.bluff]),
+      R("Saçma cevap", 3, ["freeform"], "funny", [FUN_CATS.funny]), R("Tahmin yarışı", 4, ["estimate"], "all", [FUN_CATS.guess]),
+      R("Final", 1, ["choice"], "final"),
+    ],
+  },
+  streak: { name: "Zamana karşı seri", description: "Her soruda süre kısalır; art arda doğru bilen takım puan çarpanı kazanır.", durationSec: 20, slots: [R("Zamana karşı seri", 12, ["choice"], "streak")] },
+  silent: { name: "Sessiz gece", description: "Konuşmak yasak: herkes telefonundan oy verir, çoğunluk cevabı belirler.", durationSec: 15, slots: [R("Sessiz tur", 10, ["choice"], "silent")] },
+  funny: { name: "Saçma cevap gecesi", description: "Doğru cevap yok: takımlar komik cevap yazar, herkes en iyisine oy verir.", durationSec: 45, slots: [R("Saçma cevap", 8, ["freeform"], "funny", [FUN_CATS.funny])] },
+  bluff: { name: "Sahte cevap gecesi", description: "Gerçeğe benzeyen yalan cevap yaz, başkalarını kandır, gerçeği bul.", durationSec: 45, slots: [R("Sahte cevap", 8, ["open"], "bluff", [FUN_CATS.bluff])] },
+  guess: { name: "Tahmin yarışı", description: "Sayısal tahminler; en yakın kazanır, tam isabet bonus verir.", durationSec: 25, slots: [R("Tahmin yarışı", 12, ["estimate"], "all", [FUN_CATS.guess])] },
+  emoji: { name: "Emoji tahmini", description: "Emojilerden film, dizi, animasyon ve ülke bul.", durationSec: 20, slots: [R("Emoji tahmini", 12, ["choice"], "all", [FUN_CATS.emoji])] },
 };
 
 export const THEMES: Record<string, { name: string; categories: string[] }> = {
@@ -186,7 +202,7 @@ export function buildNight(opts: {
   // İngilizce havuzda bir konu yeterince soru içermiyorsa karışık havuza geçilir (host'a düşük havuz uyarısı gider)
   const thin = Boolean(cats && base.filter((q) => cats!.includes(q.category)).length < 60);
   if (thin) cats = undefined;
-  const pool = [...base, ...(opts.extra ?? [])].filter((q) => (q.status ?? "approved") === "approved" && (opts.allowed.image || !q.image) && opts.allowed.kinds.has(q.kind));
+  const pool = [...base, ...FUN_BANK, ...(opts.extra ?? [])].filter((q) => (q.status ?? "approved") === "approved" && (opts.allowed.image || !q.image) && opts.allowed.kinds.has(q.kind));
   const used = new Set<string>();
   const questions: Question[] = [];
   let low = thin;
@@ -199,7 +215,7 @@ export function buildNight(opts: {
       for (const x of questions) usage.set(x.category, (usage.get(x.category) ?? 0) + 1);
       let kindOk = (k: Question["kind"]) => k === kind;
       const pick = (respectSeen: boolean, respectCat: boolean) => {
-        const cand = pool.filter((q) => (kindOk(q.kind)) && !used.has(q.id) && (!respectSeen || !opts.seen.has(q.id)) && (!respectCat || !cats || cats.includes(q.category)) && (round !== "speed" || q.kind === "choice"));
+        const cand = pool.filter((q) => (kindOk(q.kind)) && !used.has(q.id) && (!respectSeen || !opts.seen.has(q.id)) && (slot.cats ? slot.cats.includes(q.category) : !FUN_CAT_SET.has(q.category) && (!respectCat || !cats || cats.includes(q.category))) && (round !== "speed" || q.kind === "choice"));
         if (!cand.length) return undefined;
         const subPick = (arr: Question[]) => {
           const bySub = new Map<string, Question[]>();
@@ -208,7 +224,7 @@ export function buildNight(opts: {
           const m = Math.min(...[...bySub.keys()].map(su));
           return sample(bySub.get(sample([...bySub.keys()].filter((k) => su(k) === m), 1, r)[0])!, 1, r)[0];
         };
-        if (cats && respectCat) return subPick(cand);
+        if (!slot.cats && cats && respectCat) return subPick(cand);
         // Karışık gece: konulara eşit şans (havuzda çok soru olan konu baskın çıkmasın), en az kullanılan konu önce
         const byCat = new Map<string, Question[]>();
         for (const q of cand) (byCat.get(q.category) ?? byCat.set(q.category, []).get(q.category)!).push(q);

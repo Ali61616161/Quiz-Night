@@ -84,14 +84,14 @@ describe("marka ve CSV", () => {
 describe("hesap, plan, ödeme", () => {
   let venueId = "";
   it("kayıt → doğrulama zorunlu → giriş", () => {
-    const r = signup({ email: "a@b.co", password: "uzunsifre123", venueName: "Kafe X" });
+    const r = signup({ email: "a@b.co", password: "uzunsifre123", venueName: "Kafe X", acceptTerms: true });
     expect("ok" in r && r.devVerifyUrl).toBeTruthy();
     expect("error" in login("a@b.co", "uzunsifre123", "1.1.1.1")).toBe(true); // doğrulanmadı
     const u = Object.values(db.users)[0]; venueId = u.venueId;
     expect(verifyEmail(u.verifyToken!)).toBe(true);
     expect("error" in login("a@b.co", "yanlis-sifre", "1.1.1.1")).toBe(true);
     expect("token" in login("a@b.co", "uzunsifre123", "1.1.1.1")).toBe(true);
-    expect("error" in signup({ email: "a@b.co", password: "uzunsifre123", venueName: "Y" })).toBe(true);
+    expect("error" in signup({ email: "a@b.co", password: "uzunsifre123", venueName: "Y", acceptTerms: true })).toBe(true);
   });
   it("şifre düz metin saklanmaz", () => { expect(JSON.stringify(db.users)).not.toContain("uzunsifre123"); });
   it("sameOrigin farklı origin'i reddeder", () => {
@@ -161,7 +161,7 @@ import { requestReset, resetPassword, deleteAccount } from "@/lib/server/auth";
 import { advance as adv, createTeam as ct, newGame as ng, tick as tk } from "@/lib/engine/game";
 describe("şifre sıfırlama, hesap silme, ilerletme", () => {
   it("sıfırlama bağlantısı tek kullanımlık; eski şifre geçersiz; açık oturumlar kapanır", () => {
-    signup({ email: "r@b.co", password: "eski-sifre-123", venueName: "Reset Kafe" });
+    signup({ email: "r@b.co", password: "eski-sifre-123", venueName: "Reset Kafe", acceptTerms: true });
     const u = Object.values(db.users).find((x) => x.email === "r@b.co")!; verifyEmail(u.verifyToken!);
     expect("token" in login("r@b.co", "eski-sifre-123", "1.1.1.1")).toBe(true);
     expect(requestReset("yok@yok.co")).toBeNull();
@@ -183,5 +183,21 @@ describe("şifre sıfırlama, hesap silme, ilerletme", () => {
     adv(g, 999_999); // süre dolmuş
     expect(g.phase).toBe("question_locked");
     void tk;
+  });
+});
+
+import { signupSchema } from "@/lib/server/auth";
+describe("kayıt: koşulların açık kabulü", () => {
+  it("kabul işaretlenmeden kayıt reddedilir", () => {
+    expect(signupSchema.safeParse({ email: "k@b.co", password: "uzunsifre123", venueName: "Kafe" }).success).toBe(false);
+    expect(signupSchema.safeParse({ email: "k@b.co", password: "uzunsifre123", venueName: "Kafe", acceptTerms: false }).success).toBe(false);
+    expect(signupSchema.safeParse({ email: "k@b.co", password: "uzunsifre123", venueName: "Kafe", acceptTerms: true }).success).toBe(true);
+  });
+  it("kabul edilen sürüm ve zaman kullanıcıya yazılır", async () => {
+    const { LEGAL_VERSION } = await import("@/lib/legal");
+    const { db } = await import("@/lib/server/db");
+    signup({ email: "kabul@b.co", password: "uzunsifre123", venueName: "Kabul Kafe", acceptTerms: true });
+    const u = Object.values(db.users).find((x) => x.email === "kabul@b.co")!;
+    expect(u.termsVersion).toBe(LEGAL_VERSION); expect(u.termsAt).toBeGreaterThan(0);
   });
 });

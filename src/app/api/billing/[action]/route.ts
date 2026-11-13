@@ -6,7 +6,7 @@ import { cancel, quote, subscribe } from "@/lib/server/billing";
 import { db, save } from "@/lib/server/db";
 import { effectivePlan } from "@/lib/server/venue";
 
-const subSchema = z.object({ plan: z.enum(["free", "starter", "pro", "brand"]), cycle: z.enum(["monthly", "yearly"]), paymentToken: z.string().max(80).default("tok_demo"), coupon: z.string().max(30).optional() });
+const subSchema = z.object({ plan: z.enum(["free", "starter", "pro", "brand"]), cycle: z.enum(["monthly", "yearly"]), paymentToken: z.string().max(80).default("tok_demo"), acceptSale: z.boolean().optional(), coupon: z.string().max(30).optional() });
 
 export async function GET(req: Request, ctx: { params: Promise<{ action: string }> }) {
   const { action } = await ctx.params;
@@ -30,6 +30,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ action: string
     const v = s.venue;
     if (action === "subscribe") {
       const b = subSchema.parse(await req.json());
+      if (b.plan !== "free" && b.acceptSale !== true) return fail(400, "consent", "Ön bilgilendirme ve iptal/iade koşullarını onaylamalısın.");
       const r = await subscribe(v, b.plan, b.cycle, b.paymentToken, b.coupon);
       return r.ok ? json(r) : fail(402, "payment", r.error);
     }

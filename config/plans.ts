@@ -11,6 +11,10 @@ export type Feature =
   | "round_picture"
   | "round_matching"
   | "round_estimate"
+  | "round_streak"
+  | "round_silent"
+  | "round_funny"
+  | "round_bluff"
   | "own_packs_play"
   | "poster_pdf"
   | "stats"
@@ -33,12 +37,12 @@ export interface Plan {
 
 const starter: Feature[] = [
   "unlimited_players", "unlimited_games", "mode_individual",
-  "round_speed", "round_wager", "round_ordering",
+  "round_speed", "round_wager", "round_ordering", "round_streak", "round_silent", "round_funny",
   "own_packs_play", "poster_pdf", "auto_host",
 ];
 const pro: Feature[] = [
   ...starter, "mode_majority", "round_picture", "round_matching",
-  "round_estimate", "stats", "bulk_csv",
+  "round_estimate", "round_bluff", "stats", "bulk_csv",
 ];
 const brand: Feature[] = [...pro, "branding", "league", "hide_platform_brand"];
 

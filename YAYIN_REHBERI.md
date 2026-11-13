@@ -37,7 +37,7 @@ Yapılacaklar:
 
 Durum: canlı oyunlar **bellekte** tutulur ve SSE bağlantıları aynı Node sürecinde yaşar. Bu bilinçli bir tercihtir (basit, hızlı, 200 oyuncu/40 takım yük testinde p95 yayın gecikmesi < 0,5 sn).
 Sonuçları:
-- Süreç yeniden başlarsa canlı oyun durumu `db.json` anlık görüntüsünden yüklenir (en fazla birkaç saniyelik kayıp); bağlı istemciler otomatik yeniden bağlanır.
+- **Süreç yeniden başlarsa devam eden canlı oyunlar kaybolur** (yalnızca hesaplar, mekanlar, görülen sorular ve ödemeler `db.json` içinde kalıcıdır). Bu yüzden dağıtım/yeniden başlatmayı etkinlik saatleri dışında yapın; oyuncular "oyun bulunamadı" görür.
 - **İki örnek (instance) çalıştırmayın**: aynı odaya farklı süreçlere giden istekler tutarsız olur. Yatay ölçekleme için yapılandırma `replicas: 1` kalmalı.
 - Yük dengeleyici varsa tek örneğe sabitleyin.
 

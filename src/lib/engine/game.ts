@@ -4,7 +4,8 @@ import { PLANS } from "@config/plans";
 import { nextPhase } from "./machine";
 import { canonAnswer, resolveVotes, scoreQuestion, validateAnswer } from "./scoring";
 import { TEAM_COLORS, TEAM_EMOJIS } from "./types";
-import type { Brand, Game, Member, Question, Settings, Team, TeamMode } from "./types";
+import { VOTE_ROUNDS, type Brand, type Game, type JokerKind, type Member, type PoolEntry, type Question, type RoundType, type Settings, type Team, type TeamMode } from "./types";
+import { normalizeTr } from "./normalize";
 
 export const CAPTAIN_TIMEOUT_MS = 15_000;
 const ROOM_ALPHABET = "ABCDEFGHJKLMNPRSTUVYZ23456789";
@@ -40,7 +41,7 @@ export function newGame(opts: {
     hostToken: token(), tvToken: token(), phase: "lobby", qIndex: 0, mode: "captain",
     questions: opts.questions, openedAt: null, deadline: null,
     settings: { ...DEFAULT_SETTINGS, ...opts.settings },
-    teams: [], answers: {}, suggestions: {}, wagers: {}, jokersUsed: [], jokerActive: {},
+    teams: [], answers: {}, suggestions: {}, wagers: {}, jokersUsed: [], jokerActive: {}, jokerKind: {}, sabotage: {}, sabotageUsed: [], streakBase: {}, pool: [], picks: {},
     results: {}, overrides: {}, voided: false, appeals: [], autoHost: false, paused: false,
     playerLimit: PLANS[plan].playerLimit, allowedModes: allowedModesFor(plan),
     createdAt: opts.now ?? Date.now(), endedAt: null, version: 0,
@@ -150,10 +151,16 @@ export function submitAnswer(g: Game, p0: { memberToken: string; value: string; 
   if (team.captainId !== member.id) throw new GameError("not_captain", "Cevabı sadece kaptan gönderir.", 403);
   const q = curQ(g);
   p.value = canonAnswer(q, p.value);
+  if (isVoteRound(q)) {
+    p.value = cleanName(p.value, 80);
+    if (!p.value) throw new GameError("invalid", "Geçersiz cevap.");
+    if (isNameBlocked(p.value)) throw new GameError("blocked", "Bu ifade kullanılamaz, başka bir şey yaz.");
+  }
   if (!validateAnswer(q, p.value)) throw new GameError("invalid", "Geçersiz cevap.");
   const prev = g.answers[team.id];
   if (prev?.locked) throw new GameError("locked", "Cevap kilitlendi, değişiklik yapılamaz.", 409);
   if (prev && g.settings.lockFirst) throw new GameError("locked", "İlk cevap kilitlenir, değişiklik yapılamaz.", 409);
+  if (q.round === "bluff" && sameAsTruth(q, p.value)) throw new GameError("truth", "Bu doğru cevap! Gerçekmiş gibi görünen ama yanlış bir cevap yaz.", 409);
   const speed = q.round === "speed";
   g.answers[team.id] = { value: p.value, byMemberId: member.id, at: p.now, locked: p.lock || g.settings.lockFirst || speed };
   bump(g);
@@ -169,12 +176,61 @@ export function placeWager(g: Game, memberToken: string, amount: number) {
   g.wagers[team.id] = amount; bump(g);
 }
 
-export function activateJoker(g: Game, memberToken: string) {
+export function activateJoker(g: Game, memberToken: string, kind: JokerKind = "double") {
   const { team, member } = requireMember(g, memberToken);
   if (g.phase !== "question_open") throw new GameError("closed", "Joker sadece soru açıkken kullanılır.", 409);
   if (team.captainId !== member.id) throw new GameError("not_captain", "Jokeri sadece kaptan kullanır.", 403);
   if (g.jokersUsed.includes(team.id)) throw new GameError("used", "Jokerini zaten kullandın.", 409);
-  g.jokersUsed.push(team.id); g.jokerActive[team.id] = true; bump(g);
+  const q = curQ(g);
+  if (kind === "fifty" && (q.kind !== "choice" || (q.options?.length ?? 0) < 4)) throw new GameError("kind", "Yarı yarıya jokeri yalnızca şıklı sorularda kullanılır.", 409);
+  g.jokersUsed.push(team.id); g.jokerActive[team.id] = true; g.jokerKind[team.id] = kind; bump(g);
+}
+
+/** Sabotaj: hedef takımın bu soruda kazanacağı puan yarıya iner. Oyun başına bir kez. */
+export function sabotageTeam(g: Game, memberToken: string, targetId: string) {
+  const { team, member } = requireMember(g, memberToken);
+  if (g.phase !== "question_open") throw new GameError("closed", "Sabotaj sadece soru açıkken yapılır.", 409);
+  if (team.captainId !== member.id) throw new GameError("not_captain", "Sabotajı sadece kaptan yapar.", 403);
+  if (g.sabotageUsed.includes(team.id)) throw new GameError("used", "Sabotaj hakkını zaten kullandın.", 409);
+  if (targetId === team.id || !g.teams.some((t) => t.id === targetId)) throw new GameError("target", "Geçerli bir rakip takım seç.", 400);
+  g.sabotageUsed.push(team.id); g.sabotage[team.id] = targetId; bump(g);
+}
+
+export const VOTE_MS = 25_000;
+const sameAsTruth = (q: Question, v: string) => {
+  const n = normalizeTr(v);
+  return [q.correct, ...q.accepted, ...(q.en ? [q.en.correct, ...(q.en.accepted ?? [])] : [])].some((c) => normalizeTr(c) === n);
+};
+const isVoteRound = (q?: Question) => Boolean(q && (VOTE_ROUNDS as readonly RoundType[]).includes(q.round ?? "all"));
+
+/** bluff/funny: yazılan cevapları (bluff'ta gerçek cevapla birlikte) tek bir oylama listesine çevirir. */
+function buildPool(g: Game): PoolEntry[] {
+  const q = curQ(g);
+  const byText = new Map<string, PoolEntry>();
+  for (const t of g.teams) {
+    const a = g.answers[t.id]; if (!a) continue;
+    const key = normalizeTr(a.value) || a.value;
+    const e = byText.get(key) ?? { id: "", text: a.value.trim(), teamIds: [], truth: false };
+    e.teamIds.push(t.id); byText.set(key, e);
+  }
+  const list = [...byText.values()];
+  if (q.round === "bluff") list.push({ id: "", text: q.correct, teamIds: [], truth: true });
+  // Deterministik karışım (kimin yazdığı sıradan anlaşılmasın)
+  const seed = `${g.id}:${q.id}`;
+  list.sort((a, b) => (hashNum(seed + a.text) - hashNum(seed + b.text)));
+  list.forEach((e, i) => { e.id = `p${i}`; });
+  return list;
+}
+function hashNum(s: string): number { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+/** Oylama: takımlar (bluff'ta gerçeği, funny'de en iyi cevabı) seçer; kendi cevabını seçemez. */
+export function pickEntry(g: Game, memberToken: string, entryId: string, now = Date.now()) {
+  const { team, member } = requireMember(g, memberToken);
+  if (g.phase !== "question_locked" || !isVoteRound(curQ(g)) || (g.deadline !== null && now > g.deadline)) throw new GameError("closed", "Oylama açık değil.", 409);
+  const e = g.pool.find((x) => x.id === entryId);
+  if (!e) throw new GameError("invalid", "Geçersiz seçim.");
+  if (e.teamIds.includes(team.id)) throw new GameError("own", "Kendi cevabını seçemezsin.", 409);
+  g.picks[team.id] = entryId; member.lastSeen = now; bump(g);
 }
 
 export function appeal(g: Game, memberToken: string, note: string) {
@@ -191,15 +247,22 @@ export function applyScores(g: Game) {
   g.results = next;
 }
 
-function lockQuestion(g: Game) {
+function lockQuestion(g: Game, now = Date.now()) {
   resolveVotes(g);
   g.phase = "question_locked";
+  if (isVoteRound(curQ(g))) { g.pool = buildPool(g); g.picks = {}; g.openedAt = now; g.deadline = now + VOTE_MS; }
   bump(g);
 }
 
+export const isVoteQuestion = (g: Game) => isVoteRound(g.questions[g.qIndex]);
 export function tick(g: Game, now: number): boolean {
-  if (g.phase === "question_open" && g.deadline !== null && now >= g.deadline) { lockQuestion(g); return true; }
+  if (g.phase === "question_open" && g.deadline !== null && now >= g.deadline) { lockQuestion(g, now); return true; }
+  // Oylama süresi dolunca otomatik cevap/skor aşamasına geç
+  if (g.phase === "question_locked" && isVoteRound(curQ(g)) && g.deadline !== null && now >= g.deadline) { revealNow(g, now); return true; }
   return false;
+}
+function revealNow(g: Game, now: number) {
+  g.deadline = null; g.phase = "answer_reveal"; applyScores(g); g.openedAt = g.openedAt ?? now; bump(g);
 }
 
 const needsIntro = (g: Game, i: number) => {
@@ -215,14 +278,28 @@ export function advance(g: Game, now: number) {
   const to = nextPhase(g.phase, hasMore, needsIntro(g, g.qIndex + 1));
   if (to === g.phase) return;
   if (g.phase === "scoreboard" && hasMore) {
+    const prev = curQ(g), nextQ = g.questions[g.qIndex + 1];
+    const keepStreak = prev?.round === "streak" && nextQ?.round === "streak" && prev.roundNo === nextQ.roundNo;
+    const streak: Record<string, number> = {};
+    if (keepStreak) for (const t of g.teams) streak[t.id] = g.results[t.id]?.correct ? (g.streakBase[t.id] ?? 0) + 1 : 0;
     g.qIndex++;
-    g.answers = {}; g.suggestions = {}; g.results = {}; g.overrides = {}; g.jokerActive = {}; g.wagers = {}; g.voided = false;
+    g.answers = {}; g.suggestions = {}; g.results = {}; g.overrides = {}; g.jokerActive = {}; g.jokerKind = {}; g.sabotage = {}; g.wagers = {}; g.voided = false;
+    g.pool = []; g.picks = {}; g.streakBase = streak;
   }
-  if (g.phase === "question_open" && to === "question_locked") { lockQuestion(g); return; }
+  if (g.phase === "question_open" && to === "question_locked") { lockQuestion(g, now); return; }
   if (to === "question_open") {
-    g.mode = g.settings.teamMode; g.openedAt = now; g.deadline = now + g.settings.durationMs;
+    const q = curQ(g);
+    let dur = g.settings.durationMs;
+    g.mode = g.settings.teamMode;
+    if (q?.round === "silent") { g.mode = "majority"; dur = Math.min(dur, 20_000); }
+    if (q && isVoteRound(q)) { g.mode = "captain"; dur = Math.max(dur, 45_000); }
+    if (q?.round === "streak") {
+      const idx = g.questions.slice(0, g.qIndex).filter((x) => x.round === "streak" && x.roundNo === q.roundNo).length;
+      dur = Math.max(8_000, dur - 2_000 * idx); // her soruda 2 sn kısalır
+    }
+    g.openedAt = now; g.deadline = now + dur;
   }
-  if (to === "answer_reveal") applyScores(g);
+  if (to === "answer_reveal") { g.deadline = null; applyScores(g); }
   if (to === "final") g.endedAt = now;
   g.phase = to;
   bump(g);

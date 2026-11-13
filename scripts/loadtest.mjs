@@ -8,11 +8,11 @@ const COLORS = ["#D64933", "#F4B942", "#5B8DB8", "#8FBF6A", "#E07BA0", "#F28C28"
 const EMOJIS = ["⚽", "🎲", "🦁", "🔥", "🌙", "🍀", "🎯", "🚀", "🐺", "🎸", "🍕", "⭐", "🐙", "🎩", "🧿", "🦅"];
 
 const email = `load${Date.now()}@test.co`, password = "yuk-testi-sifre-1";
-const su = await (await post("/api/auth/signup", { email, password, venueName: "Yük Testi" })).json();
+const su = await (await post("/api/auth/signup", { email, password, venueName: "Yük Testi", acceptTerms: true })).json();
 if (!su.devVerifyUrl) { console.error("Sunucuyu EXPOSE_DEV_LINKS=1 ile başlat (yalnızca test)."); process.exit(2); }
 await fetch(su.devVerifyUrl.replace(/^https?:\/\/[^/]+/, BASE), { redirect: "manual" });
 const cookie = (await post("/api/auth/login", { email, password })).headers.get("set-cookie").split(";")[0];
-await post("/api/billing/subscribe", { plan: "brand", cycle: "monthly", paymentToken: "tok_ok" }, { Cookie: cookie });
+await post("/api/billing/subscribe", { plan: "brand", cycle: "monthly", paymentToken: "tok_ok", acceptSale: true }, { Cookie: cookie });
 const g = await (await post("/api/games", { template: "classic", durationSec: 15 }, { Cookie: cookie })).json();
 if (!g.id) { console.error("oyun açılamadı", g); process.exit(2); }
 
